@@ -2,60 +2,77 @@
 <html>
 <head>
 
-    <title> 드래그앤드롭 </title>
+    <title> test </title>
     <meta charset="utf-8">
-    
-    <style>
-    .dragtarget{
-        width:100px;
-        height:100px;
-        background-color:tomato;
-
-    }
-    .dragInner{
-        width:inherit;
-        height:30px;
-        background-color:slateblue;
-
-        color:white;
-    }
-    .dropzone{
-        position:absolute;
-        width:500px;
-        height:500px;
-        background-color:yellowgreen;
-
-        left:300px;
-        top:300px;
-    }
-    </style>
+    <link rel="stylesheet" href="/src/mystyle.css">
 </head>
 <body>
-    <div class="dragtarget" id="newTargetID">
-        <div class="dragInner" draggable="true" ondragstart="dragStart_(event)" ondrag="drag_(event)">
-            Drag Target
+    <div id="header-wrapper">
+
+    </div>
+    <div id="workspace">
+        <div class="panel-left">
+
+        </div>
+        <div class="panel-right">
+            
+        </div>
+        <div class="panel-center">
+            <div class="tabs">
+                <ul>
+                  <li class="tab_current" data-tab="tab-1">1</li>
+                  <li class="tab" data-tab="tab-2">2</li>
+                  <li class="tab" data-tab="tab-3">3</li>
+                </ul>
+                <div class="tab_content">
+                  <div id="first">
+                    <h3>1</h3>
+                  </div>
+                  <div id="tab-2">
+                    <h3>2</h3>
+                  </div>
+                  <div id="tab-3">
+                    <h3>3</h3>
+                  </div>
+                </div>
+              </div>
+        </div>
+        <div class="panel-bottom">
+
         </div>
     </div>
-    <div class ="dropzone" droppable="true" ondragover="dragOver_(event)" ondrop="drop_(event)"> Drop Zone </div>
-<script>
-        function dragStart_(e){
-            console.warn('drag Start');
-            var parentNode = e.target.parentElement;
-            e.dataTransfer.setDragImage(parentNode,0,0);    
-            e.dataTransfer.setData('targetId',e.target.parentElement.id);
+    <script>
+        class Tabs
+        {
+            constructor()
+            {
+                
+            }
         }
-        function drag_(e){
-            console.log("drag");
+        function TabInit() {
+            var el = document.querySelector(".tabs");
+            var liEls = el.querySelectorAll('ul li');
+            var tabContents = el.querySelector('.tab_content').children;
+            for (i = 0; i < liEls.length; i++){
+                liEls[i].classList.remove('tab_current');
+            }
+            for (i = 0; i < tabContents.length; i++){
+                tabContents[i].style.display = 'none';
+            }
+            liEls[0].classList.add('tab_current');
+            tabContents[0].style.display = 'block';
         }
-        function dragOver_(e){
-            e.preventDefault();
+        function AddTab() {
+            var el = document.querySelector(".tabs");
+            var ul = el.querySelector('ul');
+            var tab = document.createElement("li");
+            tab.classList.add('tab');
+            tab.setAttribute('data-tab','tab-4');
+            tab.innerHTML=4;
+            ul.appendChild(tab);
         }
-        function drop_(e){
-            var targetId = e.dataTransfer.getData('targetId');
-            console.warn("drop");
-            e.preventDefault();
-            e.target.appendChild(document.getElementById(targetId));
-        }
-</script>
-</body>
+        TabInit();
+        AddTab();
+    </script>
+    </body>
 </html>

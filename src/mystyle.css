@@ -1,0 +1,71 @@
+body{
+    margin: 0;
+    padding: 0;
+}
+
+#header-wrapper{
+    height: 50px;
+    background-color:darkgrey;
+}
+
+#workspace{
+    width: 100%;
+    height: calc(100% - 50px);
+    position: absolute;
+}
+
+.panel-left{
+    display: block;
+    width: 15%;
+    height: 80%;
+    left: 0;
+    top: 0;
+    position: absolute;
+    background-color: #969696;
+}
+.panel-right{
+    display: block;
+    width: 15%;
+    height: 80%;
+    right: 0;
+    top: 0;
+    position: absolute;
+    background-color: #414141;
+}
+.panel-center{
+    display: block;
+    width: 70%;
+    height: 80%;
+    top: 0;
+    left: 15%;
+    position: absolute;
+    background-color: #525252;
+}
+.panel-bottom{
+    display: block;
+    width: 15%;
+    height: 10%;
+    bottom: 0;
+    position: absolute;
+    background-color: #333333;
+}
+
+.tabs li{
+	background: none;
+	color: #222;
+	display: inline-block;
+	padding: 10px 15px;
+	cursor: pointer;
+}
+.tabs li.tab_current{
+	background: #ededed;
+	color: #222;
+}
+.tab-content{
+	display: none;
+	background: #ededed;
+	padding: 15px;
+}
+.tab.current{
+	display: inherit;
+}
