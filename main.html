@@ -28,17 +28,17 @@
   </div>
   <script>
 
-    class Tab{
+    class Tab {
       element;
       ul;
       contents;
       previous = 0;
       count = 0;
-      constructor(id){
+      constructor(id) {
         this.element = document.getElementById(id);
         var ul = document.createElement('ul');
         var div = document.createElement('div');
-        div.classList.add('tab-content');
+        div.classList.add('tab-wrapper');
         this.element.appendChild(ul);
         this.element.appendChild(div);
 
@@ -46,10 +46,11 @@
         this.contents = this.element.querySelector('div');
       }
       focus(index) {
+
         if (this.count > 0) {
           var li = this.ul.querySelectorAll('li');
-          var con = this.contents.querySelectorAll('div');
-          if (this.previous > 0) {
+          var con = this.contents.querySelectorAll("div[class='tab_content'");
+          if (this.previous > 0 && this.previous <= this.count) {
             li[this.previous - 1].classList.remove('tab_current');
             con[this.previous - 1].style.display = 'none';
           }
@@ -59,61 +60,151 @@
           this.previous = index;
         }
       }
-      
-      update(){
+
+      update() {
         var li = this.ul.querySelectorAll('li');
-        var con = this.contents.querySelectorAll('div');
-        for(var i = 0 ; i < li.length; i++)
-        {
-          li[i].id = i+1;
+        var con = this.contents.querySelectorAll("div[class='tab_content'");
+        for (var i = 0; i < li.length; i++) {
+          li[i].id = i + 1;
+        }
+        for (var i = 0; i < con.length; i++) {
+          con[i].id = i + 1;
         }
       }
-      closeTab(index){
+      closeTab(index) {
         this.count--;
         var li = this.ul.querySelectorAll('li');
-        li[index-1].remove();
-        this.update();
-        if(this.previous === index)
-        {
-          this.focus(index);
+        var con = this.contents.querySelectorAll("div[class='tab_content'");
+        if (index <= this.previous) {
+          this.previous--;
         }
+        if (this.previous < 1)
+          this.previous = 1;
+        li[index - 1].remove();
+        con[index - 1].remove();
+        this.update();
+        this.focus(this.previous);
       }
 
-      addTab(name){
+      addTab(name) {
         this.count++;
         var tab = document.createElement('li')
         tab.classList.add('tab');
         tab.id = this.count;
         tab.innerHTML = name;
-        tab.addEventListener('click', (event)=> {
-          if(event.target.id != "")
-          {
+        tab.addEventListener('click', (event) => {
+          if (event.target.id != "") {
             this.focus(event.target.id);
           }
         });
         var tab_close = document.createElement('div');
         tab_close.classList.add('tab_close');
-        tab_close.innerHTML = 'X';
-        tab_close.addEventListener('click', (event)=> {
+        tab_close.innerHTML = '×';
+        tab_close.addEventListener('click', (event) => {
           this.closeTab(event.target.parentElement.id);
         });
         tab.appendChild(tab_close);
         this.ul.appendChild(tab);
 
-        var content = document.createElement('div')
+        var content = document.createElement('div');
         content.classList.add('tab_content');
         content.id = this.count;
-        content.innerHTML = name;
+        var code_editor = document.createElement('div');
+        code_editor.classList.add('editor');
+        code_editor.setAttribute('contenteditable', 'true');
+        code_editor.setAttribute('spellcheck', 'false');
+        var empty = document.createElement('div');
+        empty.innerHTML = " ";
+        code_editor.appendChild(empty);
+        content.appendChild(code_editor);
         this.contents.appendChild(content);
 
         this.focus(this.count);
       }
     }
-  
+
     const tabs_code = new Tab('tabs_code');
     tabs_code.addTab('first');
-    tabs_code.addTab('second'); 
-    tabs_code.addTab('third'); 
+
+  </script>
+
+
+  <script>
+// Syntax highlight for JS
+const js = el => {
+  for (const node of el.children) {
+    const s = node.innerText
+      .replace(/(\/\/.*)/g, '<em>$1</em>')
+      .replace(
+        /\b(new|if|else|do|while|switch|for|in|of|continue|break|return|typeof|function|var|const|let|\.length|\.\w+)(?=[^\w])/g,
+        '<strong>$1</strong>',
+      )
+      .replace(/(".*?"|'.*?'|`.*?`)/g, '<strong><em>$1</em></strong>')
+      .replace(/\b(\d+)/g, '<em><strong>$1</strong></em>');
+    node.innerHTML = s.split('\n').join('<br/>');
+  }
+};
+
+const editor = (el, highlight = js, tab = '    ') => {
+  const caret = () => {
+    const range = window.getSelection().getRangeAt(0);
+    const prefix = range.cloneRange();
+    prefix.selectNodeContents(el);
+    prefix.setEnd(range.endContainer, range.endOffset);
+    return prefix.toString().length;
+  };
+
+  const setCaret = (pos, parent = el) => {
+    for (const node of parent.childNodes) {
+      if (node.nodeType == Node.TEXT_NODE) {
+        if (node.length >= pos) {
+          const range = document.createRange();
+          const sel = window.getSelection();
+          range.setStart(node, pos);
+          range.collapse(true);
+          sel.removeAllRanges();
+          sel.addRange(range);
+          return -1;
+        } else {
+          pos = pos - node.length;
+        }
+      } else {
+        pos = setCaret(pos, node);
+        if (pos < 0) {
+          return pos;
+        }
+      }
+    }
+    return pos;
+  };
+
+  highlight(el);
+
+  el.addEventListener('keydown', e => {
+    if (e.which === 9) {
+      const pos = caret() + tab.length;
+      const range = window.getSelection().getRangeAt(0);
+      range.deleteContents();
+      range.insertNode(document.createTextNode(tab));
+      highlight(el);
+      setCaret(pos);
+      e.preventDefault();
+    }
+  });
+
+  el.addEventListener('keyup', e => {
+    if (e.keyCode == 0x20) {//e.keyCode >= 0x30 || 
+      const pos = caret();
+      highlight(el);
+      setCaret(pos);
+    }
+  });
+};
+
+// Turn div into an editor
+const el = document.querySelector('.editor');
+el.focus();
+editor(el);
   </script>
 </body>
 
