@@ -50,28 +50,34 @@ body{
     background-color: #333333;
 }
 
-.tabs{
-    width: 500px;
+.tabs ul{
+    width: 400px;
     background-color: #525252;
+    display: flex;
 }
 
 .tabs li.tab{
-    height: 30px;
-    min-width: 60px;
+    flex:auto;
+    text-align:center;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    height: 20px;
+    max-width: 80px;
+    position: relative;
 	background-color: #333333;
     color: #888888;
     font-size: 12px;
-	display: inline-block;
     cursor: pointer;
 }
-.tab_close{
+.tabs li .tab_close{
     width: 10px;
     height: 10px;
-    position: relative;
-    right: 0px;
-    top: 0px;
+    right: 0;
+    top: 0;
+    position: absolute;
+    background-color: #222;
 	color: #000000;
-    font-size: 12px;
+    font-size: 10px;
 }
 .tabs li.tab_current{
 	background-color: #ededed;

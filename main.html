@@ -34,7 +34,6 @@
       contents;
       previous = 0;
       count = 0;
-      list = [];
       constructor(id){
         this.element = document.getElementById(id);
         var ul = document.createElement('ul');
@@ -46,18 +45,40 @@
         this.ul = this.element.querySelector('ul');
         this.contents = this.element.querySelector('div');
       }
-      focus(index){
+      focus(index) {
+        if (this.count > 0) {
+          var li = this.ul.querySelectorAll('li');
+          var con = this.contents.querySelectorAll('div');
+          if (this.previous > 0) {
+            li[this.previous - 1].classList.remove('tab_current');
+            con[this.previous - 1].style.display = 'none';
+          }
+
+          li[index - 1].classList.add('tab_current');
+          con[index - 1].style.display = 'block';
+          this.previous = index;
+        }
+      }
+      
+      update(){
         var li = this.ul.querySelectorAll('li');
         var con = this.contents.querySelectorAll('div');
-        if(this.previous>0)
+        for(var i = 0 ; i < li.length; i++)
         {
-          li[this.previous-1].classList.remove('tab_current');
-          con[this.previous-1].style.display = 'none';
+          li[i].id = i+1;
         }
-        li[index-1].classList.add('tab_current'); 
-        con[index-1].style.display = 'block';
-        this.previous = index;
       }
+      closeTab(index){
+        this.count--;
+        var li = this.ul.querySelectorAll('li');
+        li[index-1].remove();
+        this.update();
+        if(this.previous === index)
+        {
+          this.focus(index);
+        }
+      }
+
       addTab(name){
         this.count++;
         var tab = document.createElement('li')
@@ -65,11 +86,17 @@
         tab.id = this.count;
         tab.innerHTML = name;
         tab.addEventListener('click', (event)=> {
-          this.focus(event.target.id);
+          if(event.target.id != "")
+          {
+            this.focus(event.target.id);
+          }
         });
         var tab_close = document.createElement('div');
         tab_close.classList.add('tab_close');
         tab_close.innerHTML = 'X';
+        tab_close.addEventListener('click', (event)=> {
+          this.closeTab(event.target.parentElement.id);
+        });
         tab.appendChild(tab_close);
         this.ul.appendChild(tab);
 
@@ -79,7 +106,6 @@
         content.innerHTML = name;
         this.contents.appendChild(content);
 
-        this.list.push(name);
         this.focus(this.count);
       }
     }
