@@ -50,22 +50,33 @@ body{
     background-color: #333333;
 }
 
-.tabs li{
-	background: none;
-	color: #222;
+.tabs{
+    width: 500px;
+    background-color: #525252;
+}
+
+.tabs li.tab{
+    height: 30px;
+    min-width: 60px;
+	background-color: #333333;
+    color: #888888;
+    font-size: 12px;
 	display: inline-block;
-	padding: 10px 15px;
-	cursor: pointer;
+    cursor: pointer;
+}
+.tab_close{
+    width: 10px;
+    height: 10px;
+    position: relative;
+    right: 0px;
+    top: 0px;
+	color: #000000;
+    font-size: 12px;
 }
 .tabs li.tab_current{
-	background: #ededed;
+	background-color: #ededed;
 	color: #222;
 }
-.tab-content{
-	display: none;
-	background: #ededed;
+.tab_content{
 	padding: 15px;
-}
-.tab.current{
-	display: inherit;
 }

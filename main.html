@@ -1,78 +1,94 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 
-    <title> test </title>
-    <meta charset="utf-8">
-    <link rel="stylesheet" href="/src/mystyle.css">
+  <title> test </title>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="/src/mystyle.css">
 </head>
+
 <body>
-    <div id="header-wrapper">
+  <div id="header-wrapper">
+
+  </div>
+  <div id="workspace">
+    <div class="panel-left">
 
     </div>
-    <div id="workspace">
-        <div class="panel-left">
+    <div class="panel-right">
 
-        </div>
-        <div class="panel-right">
-            
-        </div>
-        <div class="panel-center">
-            <div class="tabs">
-                <ul>
-                  <li class="tab_current" data-tab="tab-1">1</li>
-                  <li class="tab" data-tab="tab-2">2</li>
-                  <li class="tab" data-tab="tab-3">3</li>
-                </ul>
-                <div class="tab_content">
-                  <div id="first">
-                    <h3>1</h3>
-                  </div>
-                  <div id="tab-2">
-                    <h3>2</h3>
-                  </div>
-                  <div id="tab-3">
-                    <h3>3</h3>
-                  </div>
-                </div>
-              </div>
-        </div>
-        <div class="panel-bottom">
-
-        </div>
     </div>
-    <script>
-        class Tabs
+    <div class="panel-center">
+      <div class="tabs" id="tabs_code"> </div>
+    </div>
+    <div class="panel-bottom">
+
+    </div>
+  </div>
+  <script>
+
+    class Tab{
+      element;
+      ul;
+      contents;
+      previous = 0;
+      count = 0;
+      list = [];
+      constructor(id){
+        this.element = document.getElementById(id);
+        var ul = document.createElement('ul');
+        var div = document.createElement('div');
+        div.classList.add('tab-content');
+        this.element.appendChild(ul);
+        this.element.appendChild(div);
+
+        this.ul = this.element.querySelector('ul');
+        this.contents = this.element.querySelector('div');
+      }
+      focus(index){
+        var li = this.ul.querySelectorAll('li');
+        var con = this.contents.querySelectorAll('div');
+        if(this.previous>0)
         {
-            constructor()
-            {
-                
-            }
+          li[this.previous-1].classList.remove('tab_current');
+          con[this.previous-1].style.display = 'none';
         }
-        function TabInit() {
-            var el = document.querySelector(".tabs");
-            var liEls = el.querySelectorAll('ul li');
-            var tabContents = el.querySelector('.tab_content').children;
-            for (i = 0; i < liEls.length; i++){
-                liEls[i].classList.remove('tab_current');
-            }
-            for (i = 0; i < tabContents.length; i++){
-                tabContents[i].style.display = 'none';
-            }
-            liEls[0].classList.add('tab_current');
-            tabContents[0].style.display = 'block';
-        }
-        function AddTab() {
-            var el = document.querySelector(".tabs");
-            var ul = el.querySelector('ul');
-            var tab = document.createElement("li");
-            tab.classList.add('tab');
-            tab.setAttribute('data-tab','tab-4');
-            tab.innerHTML=4;
-            ul.appendChild(tab);
-        }
-        TabInit();
-        AddTab();
-    </script>
-    </body>
+        li[index-1].classList.add('tab_current'); 
+        con[index-1].style.display = 'block';
+        this.previous = index;
+      }
+      addTab(name){
+        this.count++;
+        var tab = document.createElement('li')
+        tab.classList.add('tab');
+        tab.id = this.count;
+        tab.innerHTML = name;
+        tab.addEventListener('click', (event)=> {
+          this.focus(event.target.id);
+        });
+        var tab_close = document.createElement('div');
+        tab_close.classList.add('tab_close');
+        tab_close.innerHTML = 'X';
+        tab.appendChild(tab_close);
+        this.ul.appendChild(tab);
+
+        var content = document.createElement('div')
+        content.classList.add('tab_content');
+        content.id = this.count;
+        content.innerHTML = name;
+        this.contents.appendChild(content);
+
+        this.list.push(name);
+        this.focus(this.count);
+      }
+    }
+  
+    const tabs_code = new Tab('tabs_code');
+    tabs_code.addTab('first');
+    tabs_code.addTab('second'); 
+    tabs_code.addTab('third'); 
+  </script>
+</body>
+
 </html>
