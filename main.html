@@ -114,7 +114,7 @@
         code_editor.setAttribute('contenteditable', 'true');
         code_editor.setAttribute('spellcheck', 'false');
         var empty = document.createElement('div');
-        empty.innerHTML = " ";
+        empty.innerHTML = "<br>";
         empty.id = 'editor_line'
         code_editor.appendChild(empty);
         content.appendChild(code_editor);
@@ -146,7 +146,12 @@
       }
     };
 
-    const editor = (el, highlight = js, tab = '    ') => {
+    const context = {
+      current_line : 0,
+      current_indent : 0
+    };
+
+    const editor = (el, highlight = js, tab = '    ', c = context) => {
       const caret = () => {
         const range = window.getSelection().getRangeAt(0);
         const prefix = range.cloneRange();
@@ -182,7 +187,8 @@
       highlight(el);
 
       el.addEventListener('keydown', e => {
-        if (e.which === 8) {
+        
+        if (e.which === 8) {//backspace
           if (el.childElementCount <= 1) {
             const pos = caret();
             if (pos <= 0) {
@@ -190,7 +196,7 @@
             }
           }
         }
-        if (e.which === 9) {
+        if (e.which === 9) {//tab
           const pos = caret() + tab.length;
           const range = window.getSelection().getRangeAt(0);
           range.deleteContents();
@@ -208,11 +214,21 @@
           setCaret(pos);
         }
       });
+
+      function getLine(){
+        var nodes = Array.prototype.slice.call(el.children);
+        var liRef = window.getSelection().getRangeAt(0).commonAncestorContainer.parentNode;
+        var num = nodes.indexOf(liRef);
+        if(num !== -1)
+        {
+          c.current_line = num+1;
+        }
+      }
+
       MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
       var observer = new MutationObserver(function (mutations, observer) {
-        // fired when a mutation occurs
-        console.log(mutations, observer);
-        // ...
+        //console.log(mutations, observer);
+        getLine();
       });
 
       // define what element should be observed by the observer
