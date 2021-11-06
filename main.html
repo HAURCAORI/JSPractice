@@ -128,8 +128,6 @@
     tabs_code.addTab('first');
 
   </script>
-
-
   <script>
 
     // Syntax highlight for JS
@@ -198,6 +196,7 @@
         const prefix = r.cloneRange();
         prefix.selectNodeContents(c.current_div);
         prefix.setStart(r.endContainer, r.endOffset);
+        
         const str = prefix.toString();
         if(str != '')
         {
@@ -232,7 +231,14 @@
       };
 
       el.addEventListener('keydown', e => {
+        //console.log(e.which);
         getCurrentDiv();
+        if (e.which !== 38 && e.which !== 40) {
+          if (show_intellisense) {
+            document.getElementById('intellisense').remove();
+            show_intellisense = false;
+          }
+        }
         if (e.which === 8) {//backspace
           if (el.childElementCount <= 1) {
             const pos = caret();
@@ -264,16 +270,22 @@
           }
           e.preventDefault();
         }
-        //console.log(c.current_indent);
+        if (e.ctrlKey && e.which === 192)
+        {
+          intellisense();
+          e.preventDefault();
+        }
+        if (e.which === 190)//.
+        {
+          //intellisense();
+        }
       });
-
       el.addEventListener('keyup', e => {
         if (e.keyCode == 0x20) {//e.keyCode >= 0x30 || 
           const pos = caret();
           highlight(el);
           setCaret(pos);
         }
-
       });
 
       function getLine(){
@@ -339,6 +351,24 @@
         subtree: true, characterData: false, childList: true, attributes: true
       });
 
+      show_intellisense = false;
+      const intellisense = () => {
+        const range = window.getSelection().getRangeAt(0);
+        range.deleteContents();
+        const span = document.createElement('span');
+        range.insertNode(span);
+        const temp = span.getBoundingClientRect();
+        var x = temp.left;
+        var y = temp.bottom;
+        span.remove();
+
+        const view = document.createElement('div');
+        view.id = 'intellisense';
+        view.style.left = x + 'px';
+        view.style.top = y +'px';
+        document.body.appendChild(view);
+        show_intellisense = true;
+      };
     };
 
 
