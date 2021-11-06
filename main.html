@@ -131,6 +131,7 @@
 
 
   <script>
+
     // Syntax highlight for JS
     const js = el => {
       for (const node of el.children) {
@@ -148,7 +149,8 @@
 
     const context = {
       current_line : 0,
-      current_indent : 0
+      current_indent : 0,
+      current_div : null
     };
 
     const editor = (el, highlight = js, tab = '    ', c = context) => {
@@ -186,8 +188,37 @@
 
       highlight(el);
 
+      const addLine = (parent = el) => {
+        /*
+        var div =  document.createElement('div');
+        div.id = 'editor_line';
+
+        const r = window.getSelectionalert('a');().getRangeAt(0);
+        const prefix = r.cloneRange();
+        prefix.selectNodeContents(el);
+        prefix.setStart(r.endContainer, r.endOffset);
+        console.log(prefix.toString());
+        div.innerHTML = '<br>'
+        var temp = c.current_div.nextSibling;
+        if(temp == null)
+        {
+          parent.appendChild(div);
+        }
+        else{
+          parent.insertBefore(div,temp); 
+        }
+        const range = document.createRange();
+        range.selectNode(div);
+        var selection = window.getSelection();
+        selection.removeAllRanges();
+        selection.addRange(range);
+        selection.collapseToStart();
+        range.deleteContents;
+        */
+      };
+
       el.addEventListener('keydown', e => {
-        
+        getCurrentDiv();
         if (e.which === 8) {//backspace
           if (el.childElementCount <= 1) {
             const pos = caret();
@@ -197,14 +228,26 @@
           }
         }
         if (e.which === 9) {//tab
-          const pos = caret() + tab.length;
-          const range = window.getSelection().getRangeAt(0);
-          range.deleteContents();
-          range.insertNode(document.createTextNode(tab));
-          highlight(el);
-          setCaret(pos);
+          c.current_indent++;
+          insertTab();
           e.preventDefault();
         }
+        if (e.which === 219) {//{
+          c.current_indent++;
+        }
+        if (e.which === 221) {//}
+          c.current_indent--;
+        }
+        if (e.which === 13) {//enter
+          addLine();
+          
+          for(var i = 0; i < c.current_indent; i++)
+          {
+            insertTab();
+          }
+          
+        }
+        //console.log(c.current_indent);
       });
 
       el.addEventListener('keyup', e => {
@@ -213,18 +256,36 @@
           highlight(el);
           setCaret(pos);
         }
+
       });
 
       function getLine(){
         var nodes = Array.prototype.slice.call(el.children);
-        var liRef = window.getSelection().getRangeAt(0).commonAncestorContainer.parentNode;
-        var num = nodes.indexOf(liRef);
+        //var liRef = window.getSelection().getRangeAt(0).commonAncestorContainer.parentNode;
+        var num = nodes.indexOf(c.current_div);
         if(num !== -1)
         {
           c.current_line = num+1;
         }
       }
-
+      function getCurrentDiv(){
+        const range = window.getSelection().getRangeAt(0);
+        var div = range.commonAncestorContainer;
+        if(div.id != 'editor_line')
+        {
+          div = range.commonAncestorContainer.parentNode;
+        }
+        c.current_div = div;
+      }
+      function insertTab(count) {
+        const pos = caret() + tab.length;
+        const range = window.getSelection().getRangeAt(0);
+        range.deleteContents();
+        range.insertNode(document.createTextNode(tab));
+        highlight(el);
+        setCaret(pos);
+      }
+      
       MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
       var observer = new MutationObserver(function (mutations, observer) {
         //console.log(mutations, observer);
