@@ -150,7 +150,8 @@
     const context = {
       current_line : 0,
       current_indent : 0,
-      current_div : null
+      current_div : null,
+      current_div_indent : 0
     };
 
     const editor = (el, highlight = js, tab = '    ', c = context) => {
@@ -189,17 +190,31 @@
       highlight(el);
 
       const addLine = (parent = el) => {
-        /*
+        
         var div =  document.createElement('div');
         div.id = 'editor_line';
 
-        const r = window.getSelectionalert('a');().getRangeAt(0);
+        const r = window.getSelection().getRangeAt(0);
         const prefix = r.cloneRange();
-        prefix.selectNodeContents(el);
+        prefix.selectNodeContents(c.current_div);
         prefix.setStart(r.endContainer, r.endOffset);
-        console.log(prefix.toString());
-        div.innerHTML = '<br>'
+        const str = prefix.toString();
+        if(str != '')
+        {
+          div.innerHTML = prefix.toString();
+        }
+        else
+        {
+          div.innerHTML = '<br>';
+        }
+        if(str.length>0)
+        {
+          prefix.deleteContents();
+          prefix.insertNode(document.createElement('br'));
+        }
+        
         var temp = c.current_div.nextSibling;
+
         if(temp == null)
         {
           parent.appendChild(div);
@@ -207,14 +222,13 @@
         else{
           parent.insertBefore(div,temp); 
         }
+        
         const range = document.createRange();
-        range.selectNode(div);
+        range.selectNodeContents(div);
         var selection = window.getSelection();
         selection.removeAllRanges();
         selection.addRange(range);
         selection.collapseToStart();
-        range.deleteContents;
-        */
       };
 
       el.addEventListener('keydown', e => {
@@ -228,7 +242,6 @@
           }
         }
         if (e.which === 9) {//tab
-          c.current_indent++;
           insertTab();
           e.preventDefault();
         }
@@ -237,15 +250,19 @@
         }
         if (e.which === 221) {//}
           c.current_indent--;
+          if(c.current_div_indent > 0)
+          {
+            removeTab();
+          }
         }
         if (e.which === 13) {//enter
           addLine();
-          
-          for(var i = 0; i < c.current_indent; i++)
+
+          for(var i = 0; i < c.current_div_indent+c.current_indent; i++)
           {
             insertTab();
           }
-          
+          e.preventDefault();
         }
         //console.log(c.current_indent);
       });
@@ -271,13 +288,31 @@
       function getCurrentDiv(){
         const range = window.getSelection().getRangeAt(0);
         var div = range.commonAncestorContainer;
-        if(div.id != 'editor_line')
+        while(div.id != 'editor_line')
         {
-          div = range.commonAncestorContainer.parentNode;
+          div = div.parentNode;
         }
         c.current_div = div;
+        //탭 개수 구하기
+        const prefix = range.cloneRange();
+        prefix.selectNodeContents(div);
+        prefix.setEnd(range.endContainer, range.endOffset);
+        const str = prefix.toString();
+        var count = 0;
+        for(var i = 0; i < str.length; i++)
+        {
+          if(str.charAt(i)!= ' ')
+          {
+            break;
+          }
+          count++;
+        }
+        c.current_indent = 0;
+        c.current_indent += (str.match(/{/g)||[]).length;
+        c.current_indent -= (str.match(/}/g)||[]).length;
+        c.current_div_indent = count/4;
       }
-      function insertTab(count) {
+      function insertTab() {
         const pos = caret() + tab.length;
         const range = window.getSelection().getRangeAt(0);
         range.deleteContents();
@@ -285,7 +320,13 @@
         highlight(el);
         setCaret(pos);
       }
-      
+      function removeTab() {
+        const range = window.getSelection().getRangeAt(0);
+        const prefix = range.cloneRange();
+        prefix.selectNodeContents(c.current_div);
+        prefix.setEnd(range.endContainer, 4);
+        prefix.deleteContents();
+      }
       MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
       var observer = new MutationObserver(function (mutations, observer) {
         //console.log(mutations, observer);
