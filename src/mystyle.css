@@ -126,7 +126,7 @@ body{
   
   #intellisense {
       width : 300px;
-      height : 200px;
+      max-height : 200px;
       overflow-y: auto;
       position: absolute;
       background-color: rgb(177, 177, 177);

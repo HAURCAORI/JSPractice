@@ -227,8 +227,7 @@
         selection.collapseToStart();
       };
 
-      var edit = false
-      var intelli_temp = '';
+      var edit = false;
       el.addEventListener('keydown', e => {
         //console.log(e.which);
         getCurrentDiv();
@@ -251,14 +250,14 @@
           }
           if (e.which === 221) {//}
             c.current_indent--;
-            if (c.current_div_indent > 0) {
+            if (c.current_div_indent >= 1) {
               removeTab();
             }
           }
           if (e.which === 13) {//enter
             addLine();
 
-            for (var i = 0; i < c.current_div_indent + c.current_indent; i++) {
+            for (var i = 0; i < Math.floor(c.current_div_indent) + c.current_indent; i++) {
               insertTab();
             }
             e.preventDefault();
@@ -269,22 +268,40 @@
           }
           if (e.which === 190)//.
           {
-            //intellisense();
+            edit = false;
           }
           if (edit == false && (event.keyCode >= 65 && event.keyCode <= 90)) {
             intellisense.show();
             edit = true;
-            intelli_temp += e.
+            intellisense.temp += String.fromCharCode(e.which);
+            intellisense.filter();
           }
           if (e.which === 32) { edit = false; };
         }
-        else{
-          if (e.which !== 38 && e.which !== 40) {
-            if (e.which === 13) {
-              insertIntelli(intellisense.liSelected);
-            }
-            document.getElementById('intellisense').remove();
-            show_intellisense = false;
+        else {
+          if (e.which === 38 || e.which === 40) {
+            e.preventDefault();
+          }
+          else if (e.which === 13) {//enter
+            insertIntelli();
+            intellisense.remove();
+            e.preventDefault();
+          }
+          else if (e.keyCode >= 65 && e.keyCode <= 90) {
+            intellisense.temp += String.fromCharCode(e.which);
+            intellisense.filter();
+          }
+          else if (e.which === 20 || e.which === 16)
+          {
+
+          }
+          else
+          {
+            intellisense.remove();
+          }
+
+          if (e.which === 8) {
+            intellisense.temp = intellisense.temp.slice(0, -1);
           }
         }
 
@@ -344,8 +361,10 @@
         prefix.setEnd(range.endContainer, 4);
         prefix.deleteContents();
       }
-      function insertIntelli(intelli) {
-        const str = intelli.innerHTML;
+      function insertIntelli() {
+        var str = intellisense.liSelected.innerHTML;
+        str = str.slice(intellisense.temp.length);
+        el.focus();
         const pos = caret() + str.length;
         const range = window.getSelection().getRangeAt(0);
         range.deleteContents();
@@ -368,7 +387,13 @@
       show_intellisense = false;
       const intellisense = {
         liSelected: null,
+        temp: '',
+        list: [],
+        view: null,
+        listbox: null,
         show: function () {
+          this.temp = '';
+          this.list = [];
           const range = window.getSelection().getRangeAt(0);
           range.deleteContents();
           const span = document.createElement('span');
@@ -382,72 +407,137 @@
           view.id = 'intellisense';
           view.style.left = x + 'px';
           view.style.top = y + 'px';
+          this.view = view;
 
           const listbox = document.createElement('div');
           listbox.id = "listbox";
-          const ul = document.createElement('ul');
-          ul.classList.add('list');
-          var list = [];
-          const li_list = [];
-          //목록 생성
-          for (var i = 0; i < _javascript.keywords.length; i++) {
-            list.push(_javascript.keywords[i]);
-          }
-          //목록 리스트 생성
-          for (var i = 0; i < list.length; i++) {
-            const li = document.createElement('li');
-            li.innerHTML = list[i];
-            ul.appendChild(li);
-            li_list.push(li);
-          }
+          this.listbox = listbox;
 
-          //방향키 사용
-          ul.focus();
-          li_list[0].classList.add('list_selected')
-          this.liSelected = li_list[0];
-          var index = 0;
-          el.addEventListener('keydown', e => {
-            if (show_intellisense) {
-              if (e.which === 40)//down
-              {
-                this.liSelected.classList.remove('list_selected');
-                index++;
-                if (index < li_list.length) {
-                  this.liSelected = li_list[index]
-                  this.liSelected.classList.add('list_selected');
-                } else {
-                  index = li_list.length - 1;
-                  this.liSelected = li_list[index]
-                  this.liSelected.classList.add('list_selected');
-                }
-                view.scrollTop = (this.liSelected.offsetTop - 50);
-                e.preventDefault();
-              }
-              else if (e.which === 38)//up
-              {
-                this.liSelected.classList.remove('list_selected');
-                index--;
-                if (index > 0) {
-                  this.liSelected = li_list[index]
-                  this.liSelected.classList.add('list_selected');
-                } else {
-                  index = 0;
-                  this.liSelected = li_list[index]
-                  this.liSelected.classList.add('list_selected');
-                }
-                view.scrollTop = (this.liSelected.offsetTop - 50);
-                e.preventDefault();
-              }
-            }
-          });
+          this.import_list();
 
-          listbox.appendChild(ul);
+          this.list_update();
+
           view.appendChild(listbox);
           document.body.appendChild(view);
           show_intellisense = true;
 
-        }
+        },
+        import_list: function() {
+          for (var i = 0; i < _javascript.keywords.length; i++) {
+            this.list.push(_javascript.keywords[i]);
+          }
+          
+          for (var i = 0; i < _javascript.object.length; i++) {
+            const methods = _javascript[_javascript.object[i]].methods;
+            for(var j = 0; j < methods.length; j++)
+            {
+              this.list.push(methods[j]);
+            }
+            const properties = _javascript[_javascript.object[i]].properties;
+            for(var j = 0; j < properties.length; j++)
+            {
+              this.list.push(properties[j]);
+            }
+            const child = _javascript[_javascript.object[i]].child;
+            if(child)
+            {
+              for(var j = 0; j < child.length; j++)
+              {
+                this.list.push(child[j]);
+              }
+           }
+          }
+          
+        },
+        filter: function () {
+          const regex = new RegExp('^' + this.temp, 'gi');
+          const temp_list = []
+          for (var i = 0; i < this.list.length; i++) {
+            if (this.list[i].match(regex)) {
+              temp_list.push(this.list[i]);
+            }
+          }
+          this.list = temp_list;
+          this.list_update();
+        },
+        list_update: function () {
+          while (this.listbox.hasChildNodes()) { this.listbox.removeChild(this.listbox.firstChild); }
 
+          const ul = document.createElement('ul');
+          ul.classList.add('list');
+
+          const li_list = [];
+
+          if (this.list.length > 0) {
+            var index = 0;
+            //목록 리스트 생성
+            for (var i = 0; i < this.list.length; i++) {
+              const li = document.createElement('li');
+              li.innerHTML = this.list[i];
+              li.id = i;
+              ul.appendChild(li);
+              li_list.push(li);
+              li.addEventListener('click', e => {
+                this.liSelected.classList.remove('list_selected');
+                index = li.id;
+                this.liSelected = li_list[index]
+                this.liSelected.classList.add('list_selected');
+                //insertIntelli();
+                //intellisense.remove();
+              });
+            }
+
+            //방향키 사용
+            li_list[0].classList.add('list_selected')
+            this.liSelected = li_list[0];
+            el.addEventListener('keydown', e => {
+              if (show_intellisense) {
+                if (e.which === 40)//down
+                {
+                  this.liSelected.classList.remove('list_selected');
+                  index++;
+                  if (index < li_list.length) {
+                    this.liSelected = li_list[index]
+                    this.liSelected.classList.add('list_selected');
+                  } else {
+                    index = li_list.length - 1;
+                    this.liSelected = li_list[index]
+                    this.liSelected.classList.add('list_selected');
+                  }
+                  this.view.scrollTop = (this.liSelected.offsetTop - 50);
+                  e.preventDefault();
+                }
+                else if (e.which === 38)//up
+                {
+                  this.liSelected.classList.remove('list_selected');
+                  index--;
+                  if (index > 0) {
+                    this.liSelected = li_list[index]
+                    this.liSelected.classList.add('list_selected');
+                  } else {
+                    index = 0;
+                    this.liSelected = li_list[index]
+                    this.liSelected.classList.add('list_selected');
+                  }
+                  this.view.scrollTop = (this.liSelected.offsetTop - 50);
+                  e.preventDefault();
+                }
+              }
+            });
+          }
+          else
+          {
+            this.remove();
+          }
+          this.listbox.appendChild(ul);
+        },
+        remove : function() {
+          if(document.getElementById('intellisense'))
+          {
+            document.getElementById('intellisense').remove();
+          }
+          show_intellisense = false;
+        }
       };
     };
 

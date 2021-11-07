@@ -42,7 +42,7 @@ const _javascript = {
     },
     math :{
         methods : [
-            'max(,)','min(,)','round()','ceil()','floor()','exp()','pow(,)','abs()','random()','sqrt()','sin()','cos()'
+            'max()','min()','round()','ceil()','floor()','exp()','pow()','abs()','random()','sqrt()','sin()','cos()'
         ],
         properties : [
             'PI','E','LN2','LN10','LOG2E','LOG10E','SQRT2','SQRT1_2'
