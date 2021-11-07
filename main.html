@@ -26,6 +26,7 @@
 
     </div>
   </div>
+  <script type="text/javascript" src="js/intellisense.js"></script>
   <script>
 
     class Tab {
@@ -146,10 +147,10 @@
     };
 
     const context = {
-      current_line : 0,
-      current_indent : 0,
-      current_div : null,
-      current_div_indent : 0
+      current_line: 0,
+      current_indent: 0,
+      current_div: null,
+      current_div_indent: 0
     };
 
     const editor = (el, highlight = js, tab = '    ', c = context) => {
@@ -188,40 +189,36 @@
       highlight(el);
 
       const addLine = (parent = el) => {
-        
-        var div =  document.createElement('div');
+
+        var div = document.createElement('div');
         div.id = 'editor_line';
 
         const r = window.getSelection().getRangeAt(0);
         const prefix = r.cloneRange();
         prefix.selectNodeContents(c.current_div);
         prefix.setStart(r.endContainer, r.endOffset);
-        
+
         const str = prefix.toString();
-        if(str != '')
-        {
+        if (str != '') {
           div.innerHTML = prefix.toString();
         }
-        else
-        {
+        else {
           div.innerHTML = '<br>';
         }
-        if(str.length>0)
-        {
+        if (str.length > 0) {
           prefix.deleteContents();
           prefix.insertNode(document.createElement('br'));
         }
-        
+
         var temp = c.current_div.nextSibling;
 
-        if(temp == null)
-        {
+        if (temp == null) {
           parent.appendChild(div);
         }
-        else{
-          parent.insertBefore(div,temp); 
+        else {
+          parent.insertBefore(div, temp);
         }
-        
+
         const range = document.createRange();
         range.selectNodeContents(div);
         var selection = window.getSelection();
@@ -230,55 +227,67 @@
         selection.collapseToStart();
       };
 
+      var edit = false
+      var intelli_temp = '';
       el.addEventListener('keydown', e => {
         //console.log(e.which);
         getCurrentDiv();
-        if (e.which !== 38 && e.which !== 40) {
-          if (show_intellisense) {
+        //editor 관련
+        if (!show_intellisense) {
+          if (e.which === 8) {//backspace
+            if (el.childElementCount <= 1) {
+              const pos = caret();
+              if (pos <= 0) {
+                e.preventDefault();
+              }
+            }
+          }
+          if (e.which === 9) {//tab
+            insertTab();
+            e.preventDefault();
+          }
+          if (e.which === 219) {//{
+            c.current_indent++;
+          }
+          if (e.which === 221) {//}
+            c.current_indent--;
+            if (c.current_div_indent > 0) {
+              removeTab();
+            }
+          }
+          if (e.which === 13) {//enter
+            addLine();
+
+            for (var i = 0; i < c.current_div_indent + c.current_indent; i++) {
+              insertTab();
+            }
+            e.preventDefault();
+          }
+          if (e.ctrlKey && e.which === 192) {
+            intellisense.show();
+            e.preventDefault();
+          }
+          if (e.which === 190)//.
+          {
+            //intellisense();
+          }
+          if (edit == false && (event.keyCode >= 65 && event.keyCode <= 90)) {
+            intellisense.show();
+            edit = true;
+            intelli_temp += e.
+          }
+          if (e.which === 32) { edit = false; };
+        }
+        else{
+          if (e.which !== 38 && e.which !== 40) {
+            if (e.which === 13) {
+              insertIntelli(intellisense.liSelected);
+            }
             document.getElementById('intellisense').remove();
             show_intellisense = false;
           }
         }
-        if (e.which === 8) {//backspace
-          if (el.childElementCount <= 1) {
-            const pos = caret();
-            if (pos <= 0) {
-              e.preventDefault();
-            }
-          }
-        }
-        if (e.which === 9) {//tab
-          insertTab();
-          e.preventDefault();
-        }
-        if (e.which === 219) {//{
-          c.current_indent++;
-        }
-        if (e.which === 221) {//}
-          c.current_indent--;
-          if(c.current_div_indent > 0)
-          {
-            removeTab();
-          }
-        }
-        if (e.which === 13) {//enter
-          addLine();
 
-          for(var i = 0; i < c.current_div_indent+c.current_indent; i++)
-          {
-            insertTab();
-          }
-          e.preventDefault();
-        }
-        if (e.ctrlKey && e.which === 192)
-        {
-          intellisense();
-          e.preventDefault();
-        }
-        if (e.which === 190)//.
-        {
-          //intellisense();
-        }
       });
       el.addEventListener('keyup', e => {
         if (e.keyCode == 0x20) {//e.keyCode >= 0x30 || 
@@ -288,20 +297,18 @@
         }
       });
 
-      function getLine(){
+      function getLine() {
         var nodes = Array.prototype.slice.call(el.children);
         //var liRef = window.getSelection().getRangeAt(0).commonAncestorContainer.parentNode;
         var num = nodes.indexOf(c.current_div);
-        if(num !== -1)
-        {
-          c.current_line = num+1;
+        if (num !== -1) {
+          c.current_line = num + 1;
         }
       }
-      function getCurrentDiv(){
+      function getCurrentDiv() {
         const range = window.getSelection().getRangeAt(0);
         var div = range.commonAncestorContainer;
-        while(div.id != 'editor_line')
-        {
+        while (div.id != 'editor_line') {
           div = div.parentNode;
         }
         c.current_div = div;
@@ -311,18 +318,16 @@
         prefix.setEnd(range.endContainer, range.endOffset);
         const str = prefix.toString();
         var count = 0;
-        for(var i = 0; i < str.length; i++)
-        {
-          if(str.charAt(i)!= ' ')
-          {
+        for (var i = 0; i < str.length; i++) {
+          if (str.charAt(i) != ' ') {
             break;
           }
           count++;
         }
         c.current_indent = 0;
-        c.current_indent += (str.match(/{/g)||[]).length;
-        c.current_indent -= (str.match(/}/g)||[]).length;
-        c.current_div_indent = count/4;
+        c.current_indent += (str.match(/{/g) || []).length;
+        c.current_indent -= (str.match(/}/g) || []).length;
+        c.current_div_indent = count / 4;
       }
       function insertTab() {
         const pos = caret() + tab.length;
@@ -339,6 +344,15 @@
         prefix.setEnd(range.endContainer, 4);
         prefix.deleteContents();
       }
+      function insertIntelli(intelli) {
+        const str = intelli.innerHTML;
+        const pos = caret() + str.length;
+        const range = window.getSelection().getRangeAt(0);
+        range.deleteContents();
+        range.insertNode(document.createTextNode(str));
+        highlight(el);
+        setCaret(pos);
+      }
       MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
       var observer = new MutationObserver(function (mutations, observer) {
         //console.log(mutations, observer);
@@ -352,22 +366,87 @@
       });
 
       show_intellisense = false;
-      const intellisense = () => {
-        const range = window.getSelection().getRangeAt(0);
-        range.deleteContents();
-        const span = document.createElement('span');
-        range.insertNode(span);
-        const temp = span.getBoundingClientRect();
-        var x = temp.left;
-        var y = temp.bottom;
-        span.remove();
+      const intellisense = {
+        liSelected: null,
+        show: function () {
+          const range = window.getSelection().getRangeAt(0);
+          range.deleteContents();
+          const span = document.createElement('span');
+          range.insertNode(span);
+          const temp = span.getBoundingClientRect();
+          var x = temp.left;
+          var y = temp.bottom;
+          span.remove();
 
-        const view = document.createElement('div');
-        view.id = 'intellisense';
-        view.style.left = x + 'px';
-        view.style.top = y +'px';
-        document.body.appendChild(view);
-        show_intellisense = true;
+          const view = document.createElement('div');
+          view.id = 'intellisense';
+          view.style.left = x + 'px';
+          view.style.top = y + 'px';
+
+          const listbox = document.createElement('div');
+          listbox.id = "listbox";
+          const ul = document.createElement('ul');
+          ul.classList.add('list');
+          var list = [];
+          const li_list = [];
+          //목록 생성
+          for (var i = 0; i < _javascript.keywords.length; i++) {
+            list.push(_javascript.keywords[i]);
+          }
+          //목록 리스트 생성
+          for (var i = 0; i < list.length; i++) {
+            const li = document.createElement('li');
+            li.innerHTML = list[i];
+            ul.appendChild(li);
+            li_list.push(li);
+          }
+
+          //방향키 사용
+          ul.focus();
+          li_list[0].classList.add('list_selected')
+          this.liSelected = li_list[0];
+          var index = 0;
+          el.addEventListener('keydown', e => {
+            if (show_intellisense) {
+              if (e.which === 40)//down
+              {
+                this.liSelected.classList.remove('list_selected');
+                index++;
+                if (index < li_list.length) {
+                  this.liSelected = li_list[index]
+                  this.liSelected.classList.add('list_selected');
+                } else {
+                  index = li_list.length - 1;
+                  this.liSelected = li_list[index]
+                  this.liSelected.classList.add('list_selected');
+                }
+                view.scrollTop = (this.liSelected.offsetTop - 50);
+                e.preventDefault();
+              }
+              else if (e.which === 38)//up
+              {
+                this.liSelected.classList.remove('list_selected');
+                index--;
+                if (index > 0) {
+                  this.liSelected = li_list[index]
+                  this.liSelected.classList.add('list_selected');
+                } else {
+                  index = 0;
+                  this.liSelected = li_list[index]
+                  this.liSelected.classList.add('list_selected');
+                }
+                view.scrollTop = (this.liSelected.offsetTop - 50);
+                e.preventDefault();
+              }
+            }
+          });
+
+          listbox.appendChild(ul);
+          view.appendChild(listbox);
+          document.body.appendChild(view);
+          show_intellisense = true;
+
+        }
 
       };
     };
