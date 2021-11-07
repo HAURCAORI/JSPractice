@@ -228,6 +228,7 @@
       };
 
       var edit = false;
+      var range_temp;
       el.addEventListener('keydown', e => {
         //console.log(e.which);
         getCurrentDiv();
@@ -312,6 +313,10 @@
           highlight(el);
           setCaret(pos);
         }
+        if(show_intellisense)
+        {
+          range_temp = window.getSelection().getRangeAt(0);
+        }
       });
 
       function getLine() {
@@ -364,9 +369,14 @@
       function insertIntelli() {
         var str = intellisense.liSelected.innerHTML;
         str = str.slice(intellisense.temp.length);
-        el.focus();
-        const pos = caret() + str.length;
-        const range = window.getSelection().getRangeAt(0);
+
+        const range = range_temp;
+        const prefix = range.cloneRange();
+        prefix.selectNodeContents(el);
+        prefix.setEnd(range.endContainer, range.endOffset);
+
+        var pos = prefix.toString().length + str.length;
+        if(str.slice(-1) == ')'){ pos--;}
         range.deleteContents();
         range.insertNode(document.createTextNode(str));
         highlight(el);
@@ -482,8 +492,8 @@
                 index = li.id;
                 this.liSelected = li_list[index]
                 this.liSelected.classList.add('list_selected');
-                //insertIntelli();
-                //intellisense.remove();
+                insertIntelli();
+                intellisense.remove();
               });
             }
 
