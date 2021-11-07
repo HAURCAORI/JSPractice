@@ -29,108 +29,6 @@
   <script type="text/javascript" src="js/intellisense.js"></script>
   <script>
 
-    class Tab {
-      element;
-      ul;
-      contents;
-      previous = 0;
-      count = 0;
-      constructor(id) {
-        this.element = document.getElementById(id);
-        var ul = document.createElement('ul');
-        var div = document.createElement('div');
-        div.classList.add('tab-wrapper');
-        this.element.appendChild(ul);
-        this.element.appendChild(div);
-
-        this.ul = this.element.querySelector('ul');
-        this.contents = this.element.querySelector('div');
-      }
-      focus(index) {
-
-        if (this.count > 0) {
-          var li = this.ul.querySelectorAll('li');
-          var con = this.contents.querySelectorAll("div[class='tab_content'");
-          if (this.previous > 0 && this.previous <= this.count) {
-            li[this.previous - 1].classList.remove('tab_current');
-            con[this.previous - 1].style.display = 'none';
-          }
-
-          li[index - 1].classList.add('tab_current');
-          con[index - 1].style.display = 'block';
-          this.previous = index;
-        }
-      }
-
-      update() {
-        var li = this.ul.querySelectorAll('li');
-        var con = this.contents.querySelectorAll("div[class='tab_content'");
-        for (var i = 0; i < li.length; i++) {
-          li[i].id = i + 1;
-        }
-        for (var i = 0; i < con.length; i++) {
-          con[i].id = i + 1;
-        }
-      }
-      closeTab(index) {
-        this.count--;
-        var li = this.ul.querySelectorAll('li');
-        var con = this.contents.querySelectorAll("div[class='tab_content'");
-        if (index <= this.previous) {
-          this.previous--;
-        }
-        if (this.previous < 1)
-          this.previous = 1;
-        li[index - 1].remove();
-        con[index - 1].remove();
-        this.update();
-        this.focus(this.previous);
-      }
-
-      addTab(name) {
-        this.count++;
-        var tab = document.createElement('li')
-        tab.classList.add('tab');
-        tab.id = this.count;
-        tab.innerHTML = name;
-        tab.addEventListener('click', (event) => {
-          if (event.target.id != "") {
-            this.focus(event.target.id);
-          }
-        });
-        var tab_close = document.createElement('div');
-        tab_close.classList.add('tab_close');
-        tab_close.innerHTML = '×';
-        tab_close.addEventListener('click', (event) => {
-          this.closeTab(event.target.parentElement.id);
-        });
-        tab.appendChild(tab_close);
-        this.ul.appendChild(tab);
-
-        var content = document.createElement('div');
-        content.classList.add('tab_content');
-        content.id = this.count;
-        var code_editor = document.createElement('div');
-        code_editor.classList.add('editor');
-        code_editor.setAttribute('contenteditable', 'true');
-        code_editor.setAttribute('spellcheck', 'false');
-        var empty = document.createElement('div');
-        empty.innerHTML = "<br>";
-        empty.id = 'editor_line'
-        code_editor.appendChild(empty);
-        content.appendChild(code_editor);
-        this.contents.appendChild(content);
-
-        this.focus(this.count);
-      }
-    }
-
-    const tabs_code = new Tab('tabs_code');
-    tabs_code.addTab('first');
-
-  </script>
-  <script>
-
     // Syntax highlight for JS
     const js = el => {
       for (const node of el.children) {
@@ -150,10 +48,12 @@
       current_line: 0,
       current_indent: 0,
       current_div: null,
-      current_div_indent: 0
+      current_div_indent: 0,
+      isworking: true
     };
 
-    const editor = (el, highlight = js, tab = '    ', c = context) => {
+    const editor = (el, c = context, highlight = js, tab = '    ') => {
+      //caret 위치 관련
       const caret = () => {
         const range = window.getSelection().getRangeAt(0);
         const prefix = range.cloneRange();
@@ -188,6 +88,7 @@
 
       highlight(el);
 
+      //줄 추가
       const addLine = (parent = el) => {
 
         var div = document.createElement('div');
@@ -227,6 +128,7 @@
         selection.collapseToStart();
       };
 
+      //키 입력
       var edit = false;
       var range_temp;
       el.addEventListener('keydown', e => {
@@ -246,10 +148,10 @@
             insertTab();
             e.preventDefault();
           }
-          if (e.which === 219) {//{
+          if (e.shiftKey && e.which === 219) {//{
             c.current_indent++;
           }
-          if (e.which === 221) {//}
+          if (e.shiftKey && e.which === 221) {//}
             c.current_indent--;
             if (c.current_div_indent >= 1) {
               removeTab();
@@ -278,6 +180,10 @@
             intellisense.filter();
           }
           if (e.which === 32) { edit = false; };
+          if (e.ctrlKey && e.which == 83) {
+            save();
+            e.preventDefault();
+          }
         }
         else {
           if (e.which === 38 || e.which === 40) {
@@ -292,12 +198,10 @@
             intellisense.temp += String.fromCharCode(e.which);
             intellisense.filter();
           }
-          else if (e.which === 20 || e.which === 16)
-          {
+          else if (e.which === 20 || e.which === 16) {
 
           }
-          else
-          {
+          else {
             intellisense.remove();
           }
 
@@ -313,12 +217,13 @@
           highlight(el);
           setCaret(pos);
         }
-        if(show_intellisense)
-        {
+        if (show_intellisense) {
           range_temp = window.getSelection().getRangeAt(0);
         }
       });
 
+
+      //함수 모음
       function getLine() {
         var nodes = Array.prototype.slice.call(el.children);
         //var liRef = window.getSelection().getRangeAt(0).commonAncestorContainer.parentNode;
@@ -347,8 +252,8 @@
           count++;
         }
         c.current_indent = 0;
-        c.current_indent += (str.match(/{/g) || []).length;
-        c.current_indent -= (str.match(/}/g) || []).length;
+        c.current_indent += (str.match(/\{/g) || []).length;
+        c.current_indent -= (str.match(/\}/g) || []).length;
         c.current_div_indent = count / 4;
       }
       function insertTab() {
@@ -376,12 +281,36 @@
         prefix.setEnd(range.endContainer, range.endOffset);
 
         var pos = prefix.toString().length + str.length;
-        if(str.slice(-1) == ')'){ pos--;}
+        if (str.slice(-1) == ')') { pos--; }
         range.deleteContents();
         range.insertNode(document.createTextNode(str));
         highlight(el);
         setCaret(pos);
       }
+
+
+      function save() {
+        var text = '';
+        for (const node of el.children) {
+          text += node.innerHTML.replace(/\<\/?br\>/g, '').replace(/\<\/?strong\>/g, '').replace(/\<\/?em\>/g, '');
+          text += '\n';
+        }
+        var textFile = null;
+        var data = new Blob([text], { type: 'text/plain' });
+
+        if (textFile !== null) {
+          window.URL.revokeObjectURL(textFile);
+        }
+
+        textFile = window.URL.createObjectURL(data);
+        var link = document.createElement("a");
+        link.href = textFile;
+        link.download = "a.txt";
+        link.click();
+      }
+
+
+      //변경 이벤트
       MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
       var observer = new MutationObserver(function (mutations, observer) {
         //console.log(mutations, observer);
@@ -394,6 +323,8 @@
         subtree: true, characterData: false, childList: true, attributes: true
       });
 
+
+      //intellisense 구현
       show_intellisense = false;
       const intellisense = {
         liSelected: null,
@@ -430,34 +361,29 @@
           view.appendChild(listbox);
           document.body.appendChild(view);
           show_intellisense = true;
-
         },
-        import_list: function() {
+        import_list: function () {
           for (var i = 0; i < _javascript.keywords.length; i++) {
             this.list.push(_javascript.keywords[i]);
           }
-          
+
           for (var i = 0; i < _javascript.object.length; i++) {
             const methods = _javascript[_javascript.object[i]].methods;
-            for(var j = 0; j < methods.length; j++)
-            {
+            for (var j = 0; j < methods.length; j++) {
               this.list.push(methods[j]);
             }
             const properties = _javascript[_javascript.object[i]].properties;
-            for(var j = 0; j < properties.length; j++)
-            {
+            for (var j = 0; j < properties.length; j++) {
               this.list.push(properties[j]);
             }
             const child = _javascript[_javascript.object[i]].child;
-            if(child)
-            {
-              for(var j = 0; j < child.length; j++)
-              {
+            if (child) {
+              for (var j = 0; j < child.length; j++) {
                 this.list.push(child[j]);
               }
-           }
+            }
           }
-          
+
         },
         filter: function () {
           const regex = new RegExp('^' + this.temp, 'gi');
@@ -535,28 +461,130 @@
               }
             });
           }
-          else
-          {
+          else {
             this.remove();
           }
           this.listbox.appendChild(ul);
         },
-        remove : function() {
-          if(document.getElementById('intellisense'))
-          {
+        remove: function () {
+          if (document.getElementById('intellisense')) {
             document.getElementById('intellisense').remove();
           }
           show_intellisense = false;
         }
       };
     };
+  </script>
+  <script>
 
+    class Tab {
+      element;
+      ul;
+      contents;
+      tab_properties = [];
+      previous = 0;
+      count = 0;
+      constructor(id) {
+        this.element = document.getElementById(id);
+        var ul = document.createElement('ul');
+        var div = document.createElement('div');
+        div.classList.add('tab-wrapper');
+        this.element.appendChild(ul);
+        this.element.appendChild(div);
 
-    // Turn div into an editor
-    const el = document.querySelector('.editor');
+        this.ul = this.element.querySelector('ul');
+        this.contents = this.element.querySelector('div');
+      }
+      focus(index) {
+        if (this.count > 0) {
+          var li = this.ul.querySelectorAll('li');
+          var con = this.contents.querySelectorAll("div[class='tab_content'");
+          if (this.previous > 0 && this.previous <= this.count) {
+            li[this.previous - 1].classList.remove('tab_current');
+            con[this.previous - 1].style.display = 'none';
+          }
 
-    el.focus();
-    editor(el);
+          li[index - 1].classList.add('tab_current');
+          con[index - 1].style.display = 'block';
+          this.previous = index;
+        }
+      }
+
+      update() {
+        var li = this.ul.querySelectorAll('li');
+        var con = this.contents.querySelectorAll("div[class='tab_content'");
+        for (var i = 0; i < li.length; i++) {
+          li[i].id = i + 1;
+        }
+        for (var i = 0; i < con.length; i++) {
+          con[i].id = i + 1;
+        }
+      }
+      closeTab(index) {
+        this.count--;
+        var li = this.ul.querySelectorAll('li');
+        var con = this.contents.querySelectorAll("div[class='tab_content'");
+        if (index <= this.previous) {
+          this.previous--;
+        }
+        if (this.previous < 1)
+          this.previous = 1;
+        li[index - 1].remove();
+        con[index - 1].remove();
+        this.update();
+        this.focus(this.previous);
+      }
+
+      addTab(name) {
+        this.count++;
+        var tab = document.createElement('li')
+        tab.classList.add('tab');
+        tab.id = this.count;
+        tab.innerHTML = name;
+        tab.addEventListener('click', (event) => {
+          if (event.target.id != "") {
+            this.focus(event.target.id);
+          }
+        });
+        var tab_close = document.createElement('div');
+        tab_close.classList.add('tab_close');
+        tab_close.innerHTML = '×';
+        tab_close.addEventListener('click', (event) => {
+          this.closeTab(event.target.parentElement.id);
+        });
+        tab.appendChild(tab_close);
+        this.ul.appendChild(tab);
+
+        var content = document.createElement('div');
+        content.classList.add('tab_content');
+        content.id = this.count;
+        var code_editor = document.createElement('div');
+        code_editor.classList.add('editor');
+        code_editor.setAttribute('contenteditable', 'true');
+        code_editor.setAttribute('spellcheck', 'false');
+        var empty = document.createElement('div');
+        empty.innerHTML = "<br>";
+        empty.id = 'editor_line'
+        code_editor.appendChild(empty);
+        content.appendChild(code_editor);
+        this.contents.appendChild(content);
+
+        const ct = {
+          current_line: 0,
+          current_indent: 0,
+          current_div: null,
+          current_div_indent: 0,
+        };
+        this.focus(this.count);
+        this.tab_properties.push(ct);
+        code_editor.focus();
+        editor(code_editor,ct);
+      }
+    }
+
+    const tabs_code = new Tab('tabs_code');
+    tabs_code.addTab('first');
+    tabs_code.addTab('second');
   </script>
 </body>
 
