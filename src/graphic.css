@@ -1,0 +1,19 @@
+body {
+    margin:0;
+    padding:0;
+}
+
+.node {
+    width : 100px;
+    height: 20px;
+    left: 100px;
+    top:0px;
+    position: absolute;
+    background-color: crimson;
+}
+.trans {
+    transition-property: top;
+    transition-duration: 0.2s;
+    transition-timing-function: linear;
+    top:500px;
+}

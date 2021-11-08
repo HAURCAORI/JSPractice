@@ -13,12 +13,18 @@
 
   </div>
   <div id="workspace">
+    <div class="panel-left-bar">
+      <div class="bar-button" id='bt_open'>
+        OPEN
+      </div>
+      <div class="bar-button" id='bt_save'>
+        SAVE
+      </div>
+    </div>
     <div class="panel-left">
 
     </div>
-    <div class="panel-right">
 
-    </div>
     <div class="panel-center">
       <div class="tabs" id="tabs_code"> </div>
     </div>
@@ -49,7 +55,6 @@
       current_indent: 0,
       current_div: null,
       current_div_indent: 0,
-      isworking: true
     };
 
     const editor = (el, c = context, highlight = js, tab = '    ') => {
@@ -301,14 +306,17 @@
         if (textFile !== null) {
           window.URL.revokeObjectURL(textFile);
         }
-
+        
         textFile = window.URL.createObjectURL(data);
         var link = document.createElement("a");
         link.href = textFile;
         link.download = "a.txt";
         link.click();
       }
-
+      const bt_save = document.getElementById('bt_save');
+      bt_save.addEventListener('click', (event) => {
+        save();
+      });
 
       //변경 이벤트
       MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
@@ -481,7 +489,7 @@
       element;
       ul;
       contents;
-      tab_properties = [];
+      tab_context = [];
       previous = 0;
       count = 0;
       constructor(id) {
@@ -576,7 +584,7 @@
           current_div_indent: 0,
         };
         this.focus(this.count);
-        this.tab_properties.push(ct);
+        this.tab_context.push(ct);
         code_editor.focus();
         editor(code_editor,ct);
       }
