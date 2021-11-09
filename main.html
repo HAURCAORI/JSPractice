@@ -10,15 +10,25 @@
 
 <body>
   <div id="header-wrapper">
+    <div class="file_dialog">
+      개별파일 열기
+      <input type="file" id="open_file" class="inputfile" />
+      <label for="open_file">업로드</label>
+    </div>
+    <div class="file_dialog">
+      디렉토리 열기
+      <input id="open_directory" type="file" webkitdirectory directory />
+      <label for="open_directory">업로드</label>
+    </div>
 
   </div>
   <div id="workspace">
     <div class="panel-left-bar">
-      <div class="bar-button" id='bt_open'>
-        OPEN
-      </div>
       <div class="bar-button" id='bt_save'>
         SAVE
+      </div>
+      <div class="bar-button" id='bt_tab'>
+        TAB
       </div>
     </div>
     <div class="panel-left">
@@ -51,6 +61,7 @@
     };
 
     const context = {
+      file_name: '',
       current_line: 0,
       current_indent: 0,
       current_div: null,
@@ -306,11 +317,11 @@
         if (textFile !== null) {
           window.URL.revokeObjectURL(textFile);
         }
-        
+
         textFile = window.URL.createObjectURL(data);
         var link = document.createElement("a");
         link.href = textFile;
-        link.download = "a.txt";
+        link.download = c.file_name;
         link.click();
       }
       const bt_save = document.getElementById('bt_save');
@@ -543,7 +554,7 @@
         this.focus(this.previous);
       }
 
-      addTab(name) {
+      addTab(name, contents) {
         this.count++;
         var tab = document.createElement('li')
         tab.classList.add('tab');
@@ -570,29 +581,63 @@
         code_editor.classList.add('editor');
         code_editor.setAttribute('contenteditable', 'true');
         code_editor.setAttribute('spellcheck', 'false');
-        var empty = document.createElement('div');
-        empty.innerHTML = "<br>";
-        empty.id = 'editor_line'
-        code_editor.appendChild(empty);
+        if(contents !== undefined)
+        {
+          var lines = contents.split(/\r\n|\n\r|\n|\r/);
+          for(var temp of lines)
+          {
+            var empty = document.createElement('div');
+            if(temp === '')
+            {
+              temp = "<br>";
+            }
+            console.log(temp);
+            empty.innerHTML= temp;
+            empty.id = 'editor_line'
+            code_editor.appendChild(empty);
+          }
+        }else{
+          var empty = document.createElement('div');
+          empty.innerHTML = "<br>";
+          empty.id = 'editor_line'
+          code_editor.appendChild(empty);
+        }
         content.appendChild(code_editor);
         this.contents.appendChild(content);
 
         const ct = {
+          file_name: '',
           current_line: 0,
           current_indent: 0,
           current_div: null,
           current_div_indent: 0,
         };
         this.focus(this.count);
+        ct.file_name = name;
         this.tab_context.push(ct);
         code_editor.focus();
-        editor(code_editor,ct);
+        editor(code_editor, ct);
       }
     }
 
     const tabs_code = new Tab('tabs_code');
-    tabs_code.addTab('first');
-    tabs_code.addTab('second');
+    tabs_code.addTab('first.html');
+    tabs_code.addTab('second.html');
+
+    const bt_openfile = document.getElementById('open_file');
+    bt_openfile.onchange = function (event) {
+      var file = event.target.files[0];
+      if (!file) {
+        return;
+      }
+      
+      var reader = new FileReader();
+      reader.onload = function (e) {
+        fileData = e.target.result;
+        tabs_code.addTab(file.name,fileData);
+      };
+      reader.readAsText(file, 'UTF-8');
+    };
   </script>
 </body>
 
