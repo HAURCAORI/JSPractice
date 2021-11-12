@@ -57,6 +57,8 @@
           .replace(/(".*?"|'.*?'|`.*?`)/g, '<strong><em>$1</em></strong>')
           .replace(/\b(\d+)/g, '<em><strong>$1</strong></em>');
         node.innerHTML = s.split('\n').join('<br/>');
+
+
       }
     };
 
@@ -64,6 +66,8 @@
       file_name: '',
       current_line: 0,
       current_indent: 0,
+      tab_id: 0,
+      current_tab: 0,
       current_div: null,
       current_div_indent: 0,
     };
@@ -101,8 +105,6 @@
         }
         return pos;
       };
-
-      highlight(el);
 
       //줄 추가
       const addLine = (parent = el) => {
@@ -326,7 +328,10 @@
       }
       const bt_save = document.getElementById('bt_save');
       bt_save.addEventListener('click', (event) => {
-        save();
+        if (c.tab_id == c.current_tab) {
+          save();
+        }
+
       });
 
       //변경 이벤트
@@ -502,6 +507,7 @@
       contents;
       tab_context = [];
       previous = 0;
+      current_tab = 0;
       count = 0;
       constructor(id) {
         this.element = document.getElementById(id);
@@ -526,6 +532,10 @@
           li[index - 1].classList.add('tab_current');
           con[index - 1].style.display = 'block';
           this.previous = index;
+          this.current_tab = index;
+          for (var c of this.tab_context) {
+            c.current_tab = this.current_tab;
+          }
         }
       }
 
@@ -537,6 +547,9 @@
         }
         for (var i = 0; i < con.length; i++) {
           con[i].id = i + 1;
+        }
+        for (var i = 0; i < li.length; i++) {
+          this.tab_context[i].tab_id = i + 1;
         }
       }
       closeTab(index) {
@@ -550,6 +563,7 @@
           this.previous = 1;
         li[index - 1].remove();
         con[index - 1].remove();
+        this.tab_context.splice(index - 1, 1);
         this.update();
         this.focus(this.previous);
       }
@@ -581,22 +595,23 @@
         code_editor.classList.add('editor');
         code_editor.setAttribute('contenteditable', 'true');
         code_editor.setAttribute('spellcheck', 'false');
-        if(contents !== undefined)
-        {
+        if (contents !== undefined) {
           var lines = contents.split(/\r\n|\n\r|\n|\r/);
-          for(var temp of lines)
-          {
+          for (var temp of lines) {
             var empty = document.createElement('div');
-            if(temp === '')
-            {
-              temp = "<br>";
-            }
-            console.log(temp);
-            empty.innerHTML= temp;
             empty.id = 'editor_line'
+
+            if (temp === '') {
+              temp = "<br/>";
+              empty.innerHTML = "<br/>";
+            }else{
+              empty.innerText = temp;
+            }
+            
             code_editor.appendChild(empty);
+
           }
-        }else{
+        } else {
           var empty = document.createElement('div');
           empty.innerHTML = "<br>";
           empty.id = 'editor_line'
@@ -609,11 +624,15 @@
           file_name: '',
           current_line: 0,
           current_indent: 0,
+          tab_id: 0,
+          current_tab: 0,
           current_div: null,
           current_div_indent: 0,
         };
         this.focus(this.count);
         ct.file_name = name;
+        ct.tab_id = this.count;
+        ct.current_tab = this.count;
         this.tab_context.push(ct);
         code_editor.focus();
         editor(code_editor, ct);
@@ -630,11 +649,11 @@
       if (!file) {
         return;
       }
-      
+
       var reader = new FileReader();
       reader.onload = function (e) {
         fileData = e.target.result;
-        tabs_code.addTab(file.name,fileData);
+        tabs_code.addTab(file.name, fileData);
       };
       reader.readAsText(file, 'UTF-8');
     };
