@@ -317,8 +317,26 @@
         setCaret(pos);
       }
 
-      function correctNode(){
-        for (const node of parent.childNodes) {
+      function correctNode() {
+        for (const node of el.childNodes) {
+          if(node.innerText === '' && node.innerHTML != '<br>')
+          {
+            console.log(node.innerHTML);
+            node.remove();
+            continue;
+          }
+          for(const children of node.childNodes)
+          {
+            if(children.innerHTML == '')
+            {
+              children.remove();
+            }
+            else if(children.id == 'editor_line')
+            {
+              el.insertBefore(children, node);
+            }
+            
+          }
         }
       }
 
