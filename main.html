@@ -30,9 +30,12 @@
       <div class="bar-button" id='bt_tab'>
         TAB
       </div>
+      <div class="bar-button" id='bt_highlight'>
+        HIGH
+      </div>
     </div>
     <div class="panel-left">
-
+      <div class="tree" id="tree_file"> </div>
     </div>
 
     <div class="panel-center">
@@ -48,17 +51,21 @@
     // Syntax highlight for JS
     const js = el => {
       for (const node of el.children) {
+        var map = {
+          '<': '&lt',
+          '>': '&gt',
+          };
         const s = node.innerText
-          .replace(/(\/\/.*)/g, '<em>$1</em>')
-          .replace(
-            /\b(new|if|else|do|while|switch|for|in|of|continue|break|return|typeof|function|var|const|let|\.length|\.\w+)(?=[^\w])/g,
-            '<strong>$1</strong>',
-          )
-          .replace(/(".*?"|'.*?'|`.*?`)/g, '<strong><em>$1</em></strong>')
-          .replace(/\b(\d+)/g, '<em><strong>$1</strong></em>');
+        .replace(/</g, '&lt').replace(/>/g, '&gt')
+        .replace(/(\/\/.*)/g, '<em>$1</em>')
+        .replace(
+          /\b(new|if|else|do|while|switch|for|in|of|continue|break|return|typeof|function|var|const|let|\.length|\.\w+)(?=[^\w])/g,
+          '<strong>$1</strong>',
+        )
+        .replace(/(".*?"|'.*?'|`.*?`)/g, '<strong><em>$1</em></strong>')
+        .replace(/\b(\d+)/g, '<em><strong>$1</strong></em>');
+        
         node.innerHTML = s.split('\n').join('<br/>');
-
-
       }
     };
 
@@ -238,6 +245,10 @@
         if (show_intellisense) {
           range_temp = window.getSelection().getRangeAt(0);
         }
+        if(e.ctrlKey && e.which == 86)//ctrl + v
+        {
+          correctNode();
+        }
       });
 
 
@@ -306,13 +317,24 @@
         setCaret(pos);
       }
 
+      function correctNode(){
+        for (const node of parent.childNodes) {
+        }
+      }
+
 
       function save() {
         var text = '';
         for (const node of el.children) {
-          text += node.innerHTML.replace(/\<\/?br\>/g, '').replace(/\<\/?strong\>/g, '').replace(/\<\/?em\>/g, '');
+          text += node.innerHTML     
+          .replace(/\<\/?br\>/g, '')
+          .replace(/\<\/?strong\>/g, '')
+          .replace(/\<\/?em\>/g, '')
+          .replace(/&lt;/g,'<')
+          .replace(/&gt;/g,'>');
           text += '\n';
         }
+
         var textFile = null;
         var data = new Blob([text], { type: 'text/plain' });
 
@@ -517,6 +539,12 @@
         this.element.appendChild(ul);
         this.element.appendChild(div);
 
+        var bt_add = document.createElement('div');
+        bt_add.id = 'tab_add';
+        bt_add.classList.add('tab_add');
+        bt_add.innerHTML = '+';
+        this.element.appendChild(bt_add);
+
         this.ul = this.element.querySelector('ul');
         this.contents = this.element.querySelector('div');
       }
@@ -640,8 +668,13 @@
     }
 
     const tabs_code = new Tab('tabs_code');
-    tabs_code.addTab('first.html');
-    tabs_code.addTab('second.html');
+    tabs_code.addTab('empty.html');
+    
+    const tab_add = document.getElementById('tab_add');
+    tab_add.addEventListener('click', (event)=> {
+      var input = prompt('Add Tab', 'empty.html');
+      tabs_code.addTab(input);
+    });
 
     const bt_openfile = document.getElementById('open_file');
     bt_openfile.onchange = function (event) {
@@ -657,6 +690,14 @@
       };
       reader.readAsText(file, 'UTF-8');
     };
+  </script>
+
+  <script>
+    class Tree{
+      constructor(){
+
+      }
+    }
   </script>
 </body>
 

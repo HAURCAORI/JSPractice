@@ -1,3 +1,14 @@
+:root{
+    --color-dark: #202020;
+    --color-light: #949494;
+    --color-light2: #a7a7a7;
+    --color-basic: #303030;
+    --color-basic2: #404040;
+    --color-blue: #2e8eca;
+    --color-border-light: #4d4d4d;
+    --color-selected-blue: #297dc2;
+    --color-text: #ffffff;
+}
 body{
     margin: 0;
     padding: 0;
@@ -5,7 +16,7 @@ body{
 
 #header-wrapper{
     height: 50px;
-    background-color:darkgrey;
+    background-color:var(--color-dark);
 }
 
 #workspace{
@@ -49,7 +60,7 @@ body{
     height: 50px;
     line-height: 50px;
     text-align: center;
-    color: #ffffff;
+    color: var(--color-text);
     font-size: 12px;
     display: inline-block;
     cursor: pointer;
@@ -62,7 +73,7 @@ body{
     left: 50px;
     top: 0;
     position: absolute;
-    background-color: #969696;
+    background-color: var(--color-basic2);
 }
 .panel-left-bar{
     display: block;
@@ -71,7 +82,7 @@ body{
     left: 0;
     top: 0;
     position: absolute;
-    background-color: #414141;
+    background-color: var(--color-basic);
 }
 .panel-center{
     display: block;
@@ -80,7 +91,7 @@ body{
     top: 0;
     right: 0;
     position: absolute;
-    background-color: #525252;
+    background-color: var(--color-basic);
 }
 .panel-bottom{
     display: block;
@@ -88,7 +99,7 @@ body{
     height: 20px;
     bottom: 0;
     position: absolute;
-    background-color: #333333;
+    background-color: var(--color-blue);
 }
 
 .tabs {
@@ -98,11 +109,12 @@ body{
 }
 
 .tabs ul{
+    height: 20px;
     top: 0;
     left: 0;
     padding: 0;
     margin: 0;
-    background-color: #525252;
+    background-color: var(--color-basic);
     display: flex;
 }
 
@@ -111,10 +123,10 @@ body{
     text-align:center;
     overflow: hidden;
     text-overflow: ellipsis;
-    height: 20px;
+    min-height: 20px;
     max-width: 100px;
     position: relative;
-	background-color: #333333;
+	background-color: var(--color-dark);
     color: #888888;
     font-size: 12px;
     cursor: pointer;
@@ -137,24 +149,45 @@ body{
     height: calc(100% - 22px);
 }
 .tab_content{
-	height: 100%;
+    height: 100%;
+    padding-right: 5px;
+    cursor: default;
+}
+
+.tab_add{
+    width: 15px;
+    line-height: 15px;
+    right: 5px;
+    top: 2.5px;
+    position: absolute;
+	color: #000000;
+    font-size: 15px;
+    cursor: pointer;
+    text-align: center;
+}
+.tab_add:hover{
+    background-color: #999;
 }
 
 .editor {
     font-family: 'Roboto Mono', monospace;
     font-size: 14px;
-    height: 100%;
+    height: calc(100% - 7px);
     outline: none;
     overflow-y: auto;
-    padding-left: 48px;
+    margin: 2px 0px 0px 0px;
+    padding: 5px 0px 0px 48px;
     counter-reset: line;
-    background-color: gray;
+    background-color: var(--color-basic);
+    color: var(--color-text);
+    box-shadow: 0px 2px 5px var(--color-dark) inset;
   }
   
   .editor div {
     display: block;
     position: relative;
     white-space: pre-wrap;
+    cursor: text;
   }
   
   .editor div::before {
@@ -165,12 +198,28 @@ body{
     opacity: 0.5;
   }
   
+  .editor::-webkit-scrollbar {
+    width: 10px;
+  }
+  .editor::-webkit-scrollbar-thumb {
+    background-color: var(--color-light);
+  }
+  .editor::-webkit-scrollbar-track {
+    background-color: var(--color-basic);
+  }
+  .editor::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-light2);
+  }
+
   #intellisense {
       width : 300px;
       max-height : 200px;
       overflow-y: auto;
       position: absolute;
-      background-color: rgb(177, 177, 177);
+      background-color: var(--color-basic2);
+      border: 1px solid var(--color-border-light);
+      color: var(--color-text);
+      box-shadow: 5px 5px 7px var(--color-dark);
   }
   ul.list {
     list-style: none;
@@ -191,5 +240,9 @@ ul.list li:before{
 }
 
 li.list_selected {
-    background-color: #888888;
+    background-color: var(--color-selected-blue);
+}
+
+.tree {
+    height : 100px;
 }
