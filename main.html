@@ -33,18 +33,38 @@
       <div class="bar-button" id='bt_highlight'>
         HIGH
       </div>
+      <div class="bar-button" id='bt_html'>
+        HTML
+      </div>
     </div>
     <div class="panel-left">
-      <div class="tree" id="tree_file"> </div>
+      <div class="explorer-wrapper">
+        <div class="explorer-bar"> EXPLORER</div>
+        <div class="tree" id="tree_file"> </div>
+      </div>
+
     </div>
 
     <div class="panel-center">
       <div class="tabs" id="tabs_code"> </div>
     </div>
     <div class="panel-bottom">
-
     </div>
   </div>
+  <div id="contextMenu" style="display:none">
+    <ul class="menu">
+      <li class="cm_newfile">New File</li>
+      <li class="cm_newfolder">New Folder</li>
+    </ul>
+  </div>
+
+  <script>
+    const bt_html = document.getElementById('bt_html');
+    bt_html.addEventListener('click', (event) => {
+      window.open("/test.html", '_blank');
+    });
+  </script>
+
   <script type="text/javascript" src="js/intellisense.js"></script>
   <script>
 
@@ -54,17 +74,17 @@
         var map = {
           '<': '&lt',
           '>': '&gt',
-          };
+        };
         const s = node.innerText
-        .replace(/</g, '&lt').replace(/>/g, '&gt')
-        .replace(/(\/\/.*)/g, '<em>$1</em>')
-        .replace(
-          /\b(new|if|else|do|while|switch|for|in|of|continue|break|return|typeof|function|var|const|let|\.length|\.\w+)(?=[^\w])/g,
-          '<strong>$1</strong>',
-        )
-        .replace(/(".*?"|'.*?'|`.*?`)/g, '<strong><em>$1</em></strong>')
-        .replace(/\b(\d+)/g, '<em><strong>$1</strong></em>');
-        
+          .replace(/</g, '&lt').replace(/>/g, '&gt')
+          .replace(/(\/\/.*)/g, '<em>$1</em>')
+          .replace(
+            /\b(new|if|else|do|while|switch|for|in|of|continue|break|return|typeof|function|var|const|let|\.length|\.\w+)(?=[^\w])/g,
+            '<strong>$1</strong>',
+          )
+          .replace(/(".*?"|'.*?'|`.*?`)/g, '<strong><em>$1</em></strong>')
+          .replace(/\b(\d+)/g, '<em><strong>$1</strong></em>');
+
         node.innerHTML = s.split('\n').join('<br/>');
       }
     };
@@ -154,12 +174,20 @@
       };
 
       //키 입력
-      var edit = false;
+      var edit = true;
       var range_temp;
+      var correct = false;
       el.addEventListener('keydown', e => {
         //console.log(e.which);
         getCurrentDiv();
         //editor 관련
+
+        if (e.ctrlKey && e.which == 86)//ctrl + v
+        {
+
+          correct = true;
+        }
+
         if (!show_intellisense) {
           if (e.which === 8) {//backspace
             if (el.childElementCount <= 1) {
@@ -234,7 +262,6 @@
             intellisense.temp = intellisense.temp.slice(0, -1);
           }
         }
-
       });
       el.addEventListener('keyup', e => {
         if (e.keyCode == 0x20) {//e.keyCode >= 0x30 || 
@@ -245,10 +272,11 @@
         if (show_intellisense) {
           range_temp = window.getSelection().getRangeAt(0);
         }
-        if(e.ctrlKey && e.which == 86)//ctrl + v
-        {
+        if (correct) {
           correctNode();
+          correct = false;
         }
+
       });
 
 
@@ -290,7 +318,6 @@
         const range = window.getSelection().getRangeAt(0);
         range.deleteContents();
         range.insertNode(document.createTextNode(tab));
-        highlight(el);
         setCaret(pos);
       }
       function removeTab() {
@@ -319,23 +346,18 @@
 
       function correctNode() {
         for (const node of el.childNodes) {
-          if(node.innerText === '' && node.innerHTML != '<br>')
+          for (var i = 0; i < node.childNodes.length;)// children of node.childNodes)
           {
-            console.log(node.innerHTML);
-            node.remove();
-            continue;
+            if (node.childNodes[i].id == 'editor_line') {
+              el.insertBefore(node.childNodes[i], node);
+            } else {
+              i++;
+            }
           }
-          for(const children of node.childNodes)
-          {
-            if(children.innerHTML == '')
-            {
-              children.remove();
-            }
-            else if(children.id == 'editor_line')
-            {
-              el.insertBefore(children, node);
-            }
-            
+        }
+        for (const node of el.childNodes) {
+          if (!node.innerHTML) {
+            node.remove();
           }
         }
       }
@@ -344,12 +366,12 @@
       function save() {
         var text = '';
         for (const node of el.children) {
-          text += node.innerHTML     
-          .replace(/\<\/?br\>/g, '')
-          .replace(/\<\/?strong\>/g, '')
-          .replace(/\<\/?em\>/g, '')
-          .replace(/&lt;/g,'<')
-          .replace(/&gt;/g,'>');
+          text += node.innerHTML
+            .replace(/\<\/?br\>/g, '')
+            .replace(/\<\/?strong\>/g, '')
+            .replace(/\<\/?em\>/g, '')
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>');
           text += '\n';
         }
 
@@ -366,6 +388,7 @@
         link.download = c.file_name;
         link.click();
       }
+
       const bt_save = document.getElementById('bt_save');
       bt_save.addEventListener('click', (event) => {
         if (c.tab_id == c.current_tab) {
@@ -650,10 +673,10 @@
             if (temp === '') {
               temp = "<br/>";
               empty.innerHTML = "<br/>";
-            }else{
+            } else {
               empty.innerText = temp;
             }
-            
+
             code_editor.appendChild(empty);
 
           }
@@ -687,9 +710,9 @@
 
     const tabs_code = new Tab('tabs_code');
     tabs_code.addTab('empty.html');
-    
+
     const tab_add = document.getElementById('tab_add');
-    tab_add.addEventListener('click', (event)=> {
+    tab_add.addEventListener('click', (event) => {
       var input = prompt('Add Tab', 'empty.html');
       tabs_code.addTab(input);
     });
@@ -711,11 +734,79 @@
   </script>
 
   <script>
-    class Tree{
-      constructor(){
+    class Tree {
+      element;
+      current_node;
+      constructor(id) {
+        this.element = document.getElementById(id);
+        this.current_node = this.element;
+      }
 
+      addFolder(name) {
+        const ul = document.createElement('ul');
+        const node_wrapper = document.createElement('div');
+        node_wrapper.classList.add('tree_bar');
+        const folder_icon = document.createElement('div');
+        folder_icon.innerText = '∨';
+        folder_icon.classList.add('tree_icon');
+        node_wrapper.appendChild(folder_icon);
+        const folder_text = document.createElement('div');
+        folder_text.innerText = name;
+        folder_text.classList.add('tree_text');
+        node_wrapper.appendChild(folder_text);
+
+        ul.id = name;
+        ul.appendChild(node_wrapper);
+        this.current_node.appendChild(ul);
+
+        if (this.current_node !== this.element) {
+          ul.style.marginLeft = '20px';
+        }
+        this.current_node = ul;
+      }
+
+      addFile(file) {
+        const ul = this.current_node;
+        const li = document.createElement('li');
+        const node_wrapper = document.createElement('div');
+        node_wrapper.classList.add('tree_bar');
+        const file_icon = document.createElement('div');
+        file_icon.innerText = '🗎';
+        file_icon.classList.add('tree_icon');
+        node_wrapper.appendChild(file_icon);
+        const file_text = document.createElement('div');
+        file_text.innerText = file;
+        file_text.classList.add('tree_text');
+        node_wrapper.appendChild(file_text);
+
+        node_wrapper.style.marginLeft = '20px';
+        li.appendChild(node_wrapper);
+        ul.appendChild(li);
       }
     }
+    const tree_file = new Tree('tree_file');
+    tree_file.addFolder('empty');
+    tree_file.addFile('a')
+    tree_file.addFile('b')
+    tree_file.addFolder('empty2')
+    tree_file.addFile('a')
+    tree_file.addFile('b')
+
+    tree_file.element.addEventListener("contextmenu", function (event) {
+      if (document.getElementById("contextMenu").style.display == "block") {
+        document.getElementById("contextMenu").style.display = "none"
+      } else {
+        var menu = document.getElementById("contextMenu")
+        menu.style.display = 'block';
+        menu.style.left = event.pageX + "px";
+        menu.style.top = event.pageY + "px";
+      }
+      event.preventDefault();
+    });
+    document.addEventListener("click", function (event) {
+      document.getElementById("contextMenu").style.display = "none"
+    });
+
   </script>
 </body>
 

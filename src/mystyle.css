@@ -1,13 +1,17 @@
 :root{
-    --color-dark: #202020;
+    --color-dark: #181818;
     --color-light: #949494;
     --color-light2: #a7a7a7;
-    --color-basic: #303030;
-    --color-basic2: #404040;
+    --color-basic: #252525;
+    --color-basic2: #353535;
+    --color-basic3: #1b1b1b;
     --color-blue: #2e8eca;
     --color-border-light: #4d4d4d;
+    --color-border-dark: #3b3b3b;
     --color-selected-blue: #297dc2;
+    --color-selected-gray: #5e5e5e;
     --color-text: #ffffff;
+    --color-text-gray: #aaaaaa;
 }
 body{
     margin: 0;
@@ -60,7 +64,7 @@ body{
     height: 50px;
     line-height: 50px;
     text-align: center;
-    color: var(--color-text);
+    color: var(--color-text-gray);
     font-size: 12px;
     display: inline-block;
     cursor: pointer;
@@ -73,7 +77,7 @@ body{
     left: 50px;
     top: 0;
     position: absolute;
-    background-color: var(--color-basic2);
+    background-color: var(--color-basic);
 }
 .panel-left-bar{
     display: block;
@@ -82,7 +86,7 @@ body{
     left: 0;
     top: 0;
     position: absolute;
-    background-color: var(--color-basic);
+    background-color: var(--color-basic2);
 }
 .panel-center{
     display: block;
@@ -91,7 +95,7 @@ body{
     top: 0;
     right: 0;
     position: absolute;
-    background-color: var(--color-basic);
+    background-color: var(--color-basic3);
 }
 .panel-bottom{
     display: block;
@@ -114,7 +118,7 @@ body{
     left: 0;
     padding: 0;
     margin: 0;
-    background-color: var(--color-basic);
+    background-color: var(--color-basic3);
     display: flex;
 }
 
@@ -160,7 +164,7 @@ body{
     right: 5px;
     top: 2.5px;
     position: absolute;
-	color: #000000;
+	color: var(--color-text);
     font-size: 15px;
     cursor: pointer;
     text-align: center;
@@ -178,7 +182,7 @@ body{
     margin: 2px 0px 0px 0px;
     padding: 5px 0px 0px 48px;
     counter-reset: line;
-    background-color: var(--color-basic);
+    background-color: var(--color-basic3);
     color: var(--color-text);
     box-shadow: 0px 2px 5px var(--color-dark) inset;
   }
@@ -243,6 +247,79 @@ li.list_selected {
     background-color: var(--color-selected-blue);
 }
 
+.explorer-wrapper {
+    width: 250px;
+    height: 50%;
+    border-bottom: 1px solid var(--color-border-light);
+}
+.explorer-bar {
+    width: 100%;
+    height: 22px;
+    padding: 3px 0 0 10px;
+    font-size: 11px;
+    color: var(--color-text-gray);
+    border-bottom: 1px solid var(--color-border-dark);
+}
+
 .tree {
-    height : 100px;
+    width: 100%;
+    height : calc(100% - 26px);
+    color: var(--color-text);
+    font-size: 11px;
+}
+.tree ul, .tree ul li{
+    width: 100%;
+    height: 20px;
+    padding: 0;
+    margin: 0;
+    position: relative;
+    cursor: pointer;
+    display: inline-block;
+}
+.tree ul li:hover{
+    background-color: var(--color-selected-gray);
+}
+.tree_bar {
+    height: 20px;
+}
+.tree_icon{
+    width: 20px;
+    height: 20px;
+    padding-left: 5px;
+    position: absolute;
+}
+.tree_text{
+    padding-left : 25px;
+}
+
+#contextMenu { 
+    position: absolute;
+    width: 200px;
+    min-height: 20px;
+    background: #f2f4f6;
+    overflow: hidden;
+    font-size: 12px;
+} 
+ul.menu {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--color-basic2);
+    border: 1px solid var(--color-border-light);
+    color: var(--color-text);
+    box-shadow: 5px 5px 7px var(--color-dark);
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    cursor: default;
+}
+.menu > li  {
+    width: 100%;
+    height: 20px;
+    padding-left: 10px;
+    flex:auto;
+    position: relative;
+
+}
+.menu > li:hover {
+    background-color: var(--color-selected-gray);
 }
