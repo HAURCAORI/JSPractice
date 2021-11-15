@@ -53,8 +53,8 @@
   </div>
   <div id="contextMenu" style="display:none">
     <ul class="menu">
-      <li class="cm_newfile">New File</li>
-      <li class="cm_newfolder">New Folder</li>
+      <li id="cm_newfile">New File</li>
+      <li id="cm_newfolder">New Folder</li>
     </ul>
   </div>
 
@@ -737,9 +737,37 @@
     class Tree {
       element;
       current_node;
+      selection;
       constructor(id) {
         this.element = document.getElementById(id);
         this.current_node = this.element;
+        this.element.addEventListener('click', (event) => {
+          if (event.target == this.element) {
+            this.current_node = this.element;
+            if (this.selection) {
+              this.selection.classList.remove('selected');
+            }
+          }
+        });
+
+        document.getElementById('cm_newfile').addEventListener('click', function (event) {
+          var li = tree_file.addFile('null');
+          if (this.selection) {
+            this.selection.classList.remove('selected');
+          }
+          this.selection = li;
+          this.selection.classList.add('selected');
+          this.current_node = this.selection.parentElement;
+        });
+        document.getElementById('cm_newfolder').addEventListener('click', function (event) {
+          var ul = tree_file.addFolder('null');
+          if (this.selection) {
+              this.selection.classList.remove('selected');
+            }
+            this.selection = ul;
+            this.selection.classList.add('selected');
+            this.current_node = ul;
+        });
       }
 
       addFolder(name) {
@@ -753,6 +781,7 @@
         const folder_text = document.createElement('div');
         folder_text.innerText = name;
         folder_text.classList.add('tree_text');
+        folder_text.id = name;
         node_wrapper.appendChild(folder_text);
 
         ul.id = name;
@@ -760,14 +789,29 @@
         this.current_node.appendChild(ul);
 
         if (this.current_node !== this.element) {
-          ul.style.marginLeft = '20px';
+          var offset = parseFloat(this.current_node.firstChild.style.marginLeft)
+          if (!offset) { offset = 0; }
+          node_wrapper.style.marginLeft = (offset + 10) + 'px';
         }
         this.current_node = ul;
+
+        node_wrapper.addEventListener('click', (event) => {
+          if (event.target.id) {
+            if (this.selection) {
+              this.selection.classList.remove('selected');
+            }
+            this.selection = event.target.parentElement.parentElement;
+            this.selection.classList.add('selected');
+            this.current_node = this.selection;
+          }
+        });
+        return ul;
       }
 
       addFile(file) {
         const ul = this.current_node;
         const li = document.createElement('li');
+        li.id = file;
         const node_wrapper = document.createElement('div');
         node_wrapper.classList.add('tree_bar');
         const file_icon = document.createElement('div');
@@ -777,20 +821,39 @@
         const file_text = document.createElement('div');
         file_text.innerText = file;
         file_text.classList.add('tree_text');
+        file_text.id = file;
         node_wrapper.appendChild(file_text);
 
-        node_wrapper.style.marginLeft = '20px';
+        var offset = 0;
+        if (ul !== this.element) {
+          offset = parseFloat(ul.firstChild.style.marginLeft)
+          if (!offset) { offset = 0; }
+          node_wrapper.style.marginLeft = (offset + 10) + 'px';
+        }
+
         li.appendChild(node_wrapper);
         ul.appendChild(li);
+
+        node_wrapper.addEventListener('click', (event) => {
+          if (event.target.id) {
+            if (this.selection) {
+              this.selection.classList.remove('selected');
+            }
+            this.selection = event.target.parentElement.parentElement;
+            this.selection.classList.add('selected');
+            this.current_node = this.selection.parentElement;
+          }
+        });
+        return li;
       }
     }
     const tree_file = new Tree('tree_file');
     tree_file.addFolder('empty');
-    tree_file.addFile('a')
-    tree_file.addFile('b')
-    tree_file.addFolder('empty2')
-    tree_file.addFile('a')
-    tree_file.addFile('b')
+    tree_file.addFile('a');
+    tree_file.addFile('b');
+    tree_file.addFolder('empty2');
+    tree_file.addFile('a');
+    tree_file.addFile('b');
 
     tree_file.element.addEventListener("contextmenu", function (event) {
       if (document.getElementById("contextMenu").style.display == "block") {
@@ -803,6 +866,7 @@
       }
       event.preventDefault();
     });
+
     document.addEventListener("click", function (event) {
       document.getElementById("contextMenu").style.display = "none"
     });
