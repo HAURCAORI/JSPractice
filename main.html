@@ -55,6 +55,7 @@
     <ul class="menu">
       <li id="cm_newfile">New File</li>
       <li id="cm_newfolder">New Folder</li>
+      <li id="cm_rename" style="display:none">Rename</li>
       <li id="cm_delete" style="display:none">Delete</li>
     </ul>
   </div>
@@ -735,10 +736,29 @@
   </script>
 
   <script>
+    function FileContext(){
+      var context = {
+        //Common
+        file_name: '', //파일 이름
+        path: '',  //프로젝트 상 파일 경로
+        language: '',  //언어
+        data: '', //데이터
+
+        //editor 관련 속성
+        current_line: 0, 
+        current_indent: 0,
+        tab_id: 0,
+        current_tab: 0,
+        current_div: null,
+        current_div_indent: 0,
+      };
+      return context;
+    }
     class Tree {
       element;
       current_node;
       selection;
+      list_context = [];
       constructor(id) {
         this.element = document.getElementById(id);
         this.current_node = this.element;
@@ -754,7 +774,11 @@
 
         document.getElementById('cm_newfile').addEventListener('click', (event) => {
           var input = prompt('Create File', 'empty.txt');
-    
+          if(input == '')
+          {
+            alert('File name is null.')
+            return;
+          }
           const li = tree_file.addFile(input);
           if(li)
           {
@@ -769,7 +793,11 @@
         });
         document.getElementById('cm_newfolder').addEventListener('click', (event) => {
           var input = prompt('Create Folder', 'empty');
-
+          if(input == '')
+          {
+            alert('Folder name is null.')
+            return;
+          }
           const ul = tree_file.addFolder(input);
           if(ul)
           {
@@ -784,7 +812,25 @@
         });
         document.getElementById('cm_delete').addEventListener('click', (event) => {
           alert('Delete \'' + this.selection.id + '\'');
-          this.selection.remove();
+          const t = this.getPath(this.selection);
+          var valid = false;
+          for(var i = 0; i < this.list_context.length; i++) {
+            if(this.list_context[i].path == t)
+            {
+              this.list_context.splice(i,1);
+              valid = true;
+              this.selection.remove();
+              break;
+            }
+          }
+          if(!valid)
+          {
+            alert('Error');
+          }
+        });
+        document.getElementById('cm_rename').addEventListener('click', (event) => {
+          this.selection.querySelector('.tree_text').setAttribute('contenteditable', 'true');
+          this.selection.querySelector('.tree_text').focus();
         });
       }
 
@@ -849,9 +895,6 @@
             event.target.innerText = '∨';
           }
         });
-        folder_text.addEventListener('dblclick', (e) => {
-          e.target.setAttribute('contenteditable', 'true');
-        });
         folder_text.addEventListener('focusout', (e) => {
           e.target.setAttribute('contenteditable', 'false');
         });
@@ -901,6 +944,11 @@
         li.appendChild(node_wrapper);
         ul.appendChild(li);
 
+        const ct = FileContext();
+        ct.file_name = file;
+        ct.path = this.getPath(li);
+        this.list_context.push(ct);
+
         node_wrapper.addEventListener('click', (event) => {
           if (this.selection) {
               this.selection.classList.remove('selected');
@@ -912,7 +960,8 @@
           }
         });
         file_text.addEventListener('dblclick', (e) => {
-          e.target.setAttribute('contenteditable', 'true');
+          console.log(this.list_context);
+          //tabs_code.addTab('a');
         });
         file_text.addEventListener('focusout', (e) => {
           e.target.setAttribute('contenteditable', 'false');
@@ -951,6 +1000,21 @@
           this.sort(ul);
         }
       }
+
+      getPath(target){
+        var path = '';
+        var temp = target.parentElement;
+        if(temp.id && temp !== this.element)
+        {
+          path += this.getPath(temp);
+          path += '\\' + target.id;
+        }
+        else
+        {
+          path += '\\' +target.id;
+        } 
+        return path;
+      }
     }
     const tree_file = new Tree('tree_file');
     
@@ -975,10 +1039,12 @@
           if(tree_file.selection.className == 'tree')
           {
             menu.querySelector('#cm_delete').style.display = 'none';
+            menu.querySelector('#cm_rename').style.display = 'none';
           }
           else
           {
             menu.querySelector('#cm_delete').style.display = '';
+            menu.querySelector('#cm_rename').style.display = '';
           }
         }
       }
