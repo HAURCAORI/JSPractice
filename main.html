@@ -91,17 +91,7 @@
       }
     };
 
-    const context = {
-      file_name: '',
-      current_line: 0,
-      current_indent: 0,
-      tab_id: 0,
-      current_tab: 0,
-      current_div: null,
-      current_div_indent: 0,
-    };
-
-    const editor = (el, c = context, highlight = js, tab = '    ') => {
+    const editor = (el, c,  highlight = js, tab = '    ') => {
       //caret 위치 관련
       const caret = () => {
         const range = window.getSelection().getRangeAt(0);
@@ -191,6 +181,7 @@
         }
 
         if (!show_intellisense) {
+          c.edited = true;
           if (e.which === 8) {//backspace
             if (el.childElementCount <= 1) {
               const pos = caret();
@@ -236,7 +227,7 @@
           }
           if (e.which === 32) { edit = false; };
           if (e.ctrlKey && e.which == 83) {
-            save();
+            savefile();
             e.preventDefault();
           }
         }
@@ -365,7 +356,7 @@
       }
 
 
-      function save() {
+      function savefile() {
         var text = '';
         for (const node of el.children) {
           text += node.innerHTML
@@ -394,10 +385,29 @@
       const bt_save = document.getElementById('bt_save');
       bt_save.addEventListener('click', (event) => {
         if (c.tab_id == c.current_tab) {
-          save();
+          savefile();
         }
 
       });
+      
+      el.addEventListener('trigger', (event) => {
+        save();
+      });
+
+      function save(){
+        var text = '';
+        for (const node of el.children) {
+          text += node.innerHTML
+            .replace(/\<\/?br\>/g, '')
+            .replace(/\<\/?strong\>/g, '')
+            .replace(/\<\/?em\>/g, '')
+            .replace(/&lt;/g, '<')
+            .replace(/&gt;/g, '>');
+          text += '\n';
+        }
+        c.data = text;
+        c.edited = false;
+      }
 
       //변경 이벤트
       MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
@@ -639,12 +649,26 @@
         this.focus(this.previous);
       }
 
-      addTab(name, contents) {
+      addTab(context) {
+        for (var c of this.tab_context) {
+          if(c.path == context.path)
+          {
+            this.focus(c.tab_id);
+            return;
+          }
+        }
+
         this.count++;
+
+        const ev = new CustomEvent('trigger', {
+          bubbles: false,
+          detail: null
+        });
+
         var tab = document.createElement('li')
         tab.classList.add('tab');
         tab.id = this.count;
-        tab.innerHTML = name;
+        tab.innerHTML = context.file_name;
         tab.addEventListener('click', (event) => {
           if (event.target.id != "") {
             this.focus(event.target.id);
@@ -654,6 +678,12 @@
         tab_close.classList.add('tab_close');
         tab_close.innerHTML = '×';
         tab_close.addEventListener('click', (event) => {
+          if (context.edited == true)
+          {
+            if (confirm("Save File '" + context.file_name + "'?") == true) {
+              code_editor.dispatchEvent(ev);
+            }
+          }
           this.closeTab(event.target.parentElement.id);
         });
         tab.appendChild(tab_close);
@@ -666,8 +696,8 @@
         code_editor.classList.add('editor');
         code_editor.setAttribute('contenteditable', 'true');
         code_editor.setAttribute('spellcheck', 'false');
-        if (contents !== undefined) {
-          var lines = contents.split(/\r\n|\n\r|\n|\r/);
+        if (context !== undefined) {
+          var lines = context.data.split(/\r\n|\n\r|\n|\r/);
           for (var temp of lines) {
             var empty = document.createElement('div');
             empty.id = 'editor_line'
@@ -691,27 +721,17 @@
         content.appendChild(code_editor);
         this.contents.appendChild(content);
 
-        const ct = {
-          file_name: '',
-          current_line: 0,
-          current_indent: 0,
-          tab_id: 0,
-          current_tab: 0,
-          current_div: null,
-          current_div_indent: 0,
-        };
         this.focus(this.count);
-        ct.file_name = name;
-        ct.tab_id = this.count;
-        ct.current_tab = this.count;
-        this.tab_context.push(ct);
+        context.tab_id = this.count;
+        context.current_tab = this.count;
+        this.tab_context.push(context);
         code_editor.focus();
-        editor(code_editor, ct);
+        
+        editor(code_editor, context);
       }
     }
 
     const tabs_code = new Tab('tabs_code');
-    tabs_code.addTab('empty.html');
 
     const tab_add = document.getElementById('tab_add');
     tab_add.addEventListener('click', (event) => {
@@ -743,6 +763,7 @@
         path: '',  //프로젝트 상 파일 경로
         language: '',  //언어
         data: '', //데이터
+        edited: false,
 
         //editor 관련 속성
         current_line: 0, 
@@ -960,8 +981,8 @@
           }
         });
         file_text.addEventListener('dblclick', (e) => {
-          console.log(this.list_context);
-          //tabs_code.addTab('a');
+          const c = this.getContextByPath(this.getPath(e.target.parentElement.parentElement));
+          tabs_code.addTab(c);
         });
         file_text.addEventListener('focusout', (e) => {
           e.target.setAttribute('contenteditable', 'false');
@@ -1014,6 +1035,17 @@
           path += '\\' +target.id;
         } 
         return path;
+      }
+      
+      getContextByPath(path)
+      {
+        for(var i = 0; i < this.list_context.length; i++)
+        {
+          if(this.list_context[i].path == path)
+          {
+            return(this.list_context[i]);
+          }
+        }
       }
     }
     const tree_file = new Tree('tree_file');
