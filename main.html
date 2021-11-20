@@ -668,7 +668,9 @@
         var tab = document.createElement('li')
         tab.classList.add('tab');
         tab.id = this.count;
-        tab.innerHTML = context.file_name;
+        var text = document.createElement('div');
+        text.innerText = context.file_name;
+        tab.appendChild(text);
         tab.addEventListener('click', (event) => {
           if (event.target.id != "") {
             this.focus(event.target.id);
@@ -729,6 +731,18 @@
         
         editor(code_editor, context);
       }
+
+      rename()
+      {
+        var li = this.ul.querySelectorAll('li');
+        for (var i = 0; i < li.length; i++) {
+          const t = this.tab_context[i].file_name;
+          if(li[i].firstChild.innerText != t)
+          {
+            li[i].firstChild.innerText = t;
+          }
+        }
+      }
     }
 
     const tabs_code = new Tab('tabs_code');
@@ -764,7 +778,6 @@
         language: '',  //언어
         data: '', //데이터
         edited: false,
-
         //editor 관련 속성
         current_line: 0, 
         current_indent: 0,
@@ -780,6 +793,7 @@
       current_node;
       selection;
       list_context = [];
+      rename_temp;
       constructor(id) {
         this.element = document.getElementById(id);
         this.current_node = this.element;
@@ -810,7 +824,7 @@
           this.selection.classList.add('selected');
           this.current_node = this.selection.parentElement;
           }
-          this.sort(this.element);
+          this.sort();
         });
         document.getElementById('cm_newfolder').addEventListener('click', (event) => {
           var input = prompt('Create Folder', 'empty');
@@ -829,29 +843,57 @@
           this.selection.classList.add('selected');
           this.current_node = ul;
           }
-          this.sort(this.element);
+          this.sort();
         });
         document.getElementById('cm_delete').addEventListener('click', (event) => {
-          alert('Delete \'' + this.selection.id + '\'');
           const t = this.getPath(this.selection);
           var valid = false;
-          for(var i = 0; i < this.list_context.length; i++) {
-            if(this.list_context[i].path == t)
-            {
-              this.list_context.splice(i,1);
-              valid = true;
-              this.selection.remove();
-              break;
-            }
-          }
-          if(!valid)
+          if(this.selection.tagName == 'UL')
           {
-            alert('Error');
+            if (confirm("Delete all files in a folder?") == true) {
+              const regex = new RegExp('^' + t.replace(/\\/g,"\\\\"), 'gi');
+              for(var i = 0; i < this.list_context.length;) {
+                if(this.list_context[i].path.match(regex))
+                {
+                  this.list_context.splice(i,1);
+                  continue;
+                }
+                i++
+              }
+              this.selection.remove();
+              this.selection = this.element
+            }
+            return;
+          }
+          if (confirm("Delete \'" + this.selection.id + "\'?") == true) {
+            for(var i = 0; i < this.list_context.length; i++) {
+              if(this.list_context[i].path == t)
+              {
+                this.list_context.splice(i,1);
+                valid = true;
+                this.selection.remove();
+                this.selection = this.element
+                break;
+              }
+            }
+            if(!valid)
+            {
+              alert('Error');
+            }
           }
         });
         document.getElementById('cm_rename').addEventListener('click', (event) => {
           this.selection.querySelector('.tree_text').setAttribute('contenteditable', 'true');
           this.selection.querySelector('.tree_text').focus();
+          this.rename_temp = this.selection.querySelector('.tree_text').innerText;
+        });
+        document.addEventListener('keydown', (e) => {
+          if(e.which == 113 && this.selection.classList.contains('tree_element'))
+          {
+            this.selection.querySelector('.tree_text').setAttribute('contenteditable', 'true');
+            this.selection.querySelector('.tree_text').focus();
+            this.rename_temp = this.selection.querySelector('.tree_text').innerText;
+          }
         });
       }
 
@@ -879,6 +921,7 @@
         node_wrapper.appendChild(folder_text);
 
         ul.id = name;
+        ul.classList.add('tree_element');
         ul.appendChild(node_wrapper);
         this.current_node.appendChild(ul);
 
@@ -917,15 +960,13 @@
           }
         });
         folder_text.addEventListener('focusout', (e) => {
-          e.target.setAttribute('contenteditable', 'false');
+          this.rename(e.target);
         });
         folder_text.addEventListener('keydown', (e) => {
           if(e.which == '13')
           {
-            e.target.setAttribute('contenteditable', 'false');
             e.preventDefault();
-            e.target.id = e.target.innerText;
-            e.target.parentElement.parentElement.id = e.target.innerText;
+            this.rename(e.target);
           }
         });
         return ul;
@@ -943,6 +984,8 @@
         const ul = this.current_node;
         const li = document.createElement('li');
         li.id = file;
+        li.classList.add('tree_element');
+        li.setAttribute('draggable', true);
         const node_wrapper = document.createElement('div');
         node_wrapper.classList.add('tree_bar');
         const file_icon = document.createElement('div');
@@ -985,21 +1028,19 @@
           tabs_code.addTab(c);
         });
         file_text.addEventListener('focusout', (e) => {
-          e.target.setAttribute('contenteditable', 'false');
+          this.rename(e.target);
         });
         file_text.addEventListener('keydown', (e) => {
           if(e.which == '13')
           {
-            e.target.setAttribute('contenteditable', 'false');
             e.preventDefault();
-            e.target.id = e.target.innerText;
-            e.target.parentElement.parentElement.id = e.target.innerText;
+            this.rename(e.target);
           }
         });
         return li;
       }
       
-      sort(div){
+      sort(div = this.element){
         var para = div.querySelectorAll('#' + div.id + ' > ul');
         var paraArr = [].slice.call(para).sort(function (a, b) {
           return a.id > b.id ? 1 : -1;
@@ -1022,6 +1063,31 @@
         }
       }
 
+      rename(target){
+        var parent = this.getNearestList(target);
+        if(parent.tagName == 'UL') //폴더
+        {
+
+        }
+        else if(parent.tagName == 'LI') //파일
+        {
+          var con = this.getContextByPath(this.getPath(parent));
+          con.file_name = target.innerText;
+          const regex = new RegExp('\\\\' + this.rename_temp + '\$', 'gi');
+          con.path = con.path.replace(regex,'\\' + target.innerText);
+          tabs_code.rename();
+        }
+
+
+        target.setAttribute('contenteditable', 'false');
+        if(target.innerText == '')
+        {
+          target.innerText = this.rename_temp;
+          return;
+        }
+        target.id = target.innerText;
+        parent.id = target.innerText;
+      }
       getPath(target){
         var path = '';
         var temp = target.parentElement;
@@ -1046,6 +1112,18 @@
             return(this.list_context[i]);
           }
         }
+      }
+
+      getNearestList(target){
+        if(target.tagName == 'UL' || target.tagName == 'LI')
+        {
+          return target;
+        }
+        else if(target.tagName !== 'HTML')
+        {
+          return this.getNearestList(target.parentElement);
+        }
+        return null;
       }
     }
     const tree_file = new Tree('tree_file');
