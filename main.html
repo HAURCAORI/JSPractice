@@ -805,9 +805,44 @@
             }
           }
         });
+
+        this.element.setAttribute('droppable', true);
+        this.element.addEventListener('dragover', (e) => {
+          e.preventDefault();
+        });
+        this.element.addEventListener('drop', (e) => {
+          e.preventDefault();
+          if (e.offsetY > 100) {
+            var target = e.dataTransfer.getData('dragfile');
+            if (target) {
+              var target_el = this.element;
+              var el = this.getElementByPath(target);
+              if (el) {
+                var con = this.getContextByPath(this.getPath(el));
+                target_el.appendChild(el);
+
+                var newpath = '\\' + el.id;
+                con.path = newpath;
+
+                el.firstChild.style.marginLeft = '';
+                this.sort();
+              }
+            }
+            else
+            {
+              target = e.dataTransfer.getData('dragfolder');
+              if(target)
+              {
+
+              }
+            }
+          }
+        });
+
+
         document.getElementById('cm_newfile').addEventListener('click', (event) => {
           var input = prompt('Create File', 'empty.txt');
-          if (input == '') {
+          if (input == null) {
             alert('File name is null.')
             return;
           }
@@ -824,7 +859,7 @@
         });
         document.getElementById('cm_newfolder').addEventListener('click', (event) => {
           var input = prompt('Create Folder', 'empty');
-          if (input == '') {
+          if (input == null) {
             alert('Folder name is null.')
             return;
           }
@@ -908,36 +943,77 @@
         folder_text.id = name;
         node_wrapper.appendChild(folder_text);
 
-        /*
-        node_wrapper.addEventListener('mouseenter', (e) => {
-        });
-        */
         node_wrapper.setAttribute('droppable', true);
         node_wrapper.addEventListener('dragover', (e) => {
           e.preventDefault();
         });
         node_wrapper.addEventListener('drop', (e) => {
           e.preventDefault();
-          var target = e.dataTransfer.getData('target');
-          var target_el = this.getNearestList(e.target)
-          var el = this.getElementByPath(target);
-          if(el)
-          {
-            var con = this.getContextByPath(this.getPath(el));
-            target_el.appendChild(el);
+          var target = e.dataTransfer.getData('dragfile');
+          if (target) {
+            var target_el = this.getNearestList(e.target)
+            var el = this.getElementByPath(target);
+            if (el) {
+              var con = this.getContextByPath(this.getPath(el));
+              target_el.appendChild(el);
 
-            var newpath = this.getPath(target_el) + '\\' + el.id;
-            con.path = newpath;
+              var newpath = this.getPath(target_el) + '\\' + el.id;
+              con.path = newpath;
 
-            var offset = 0;
-            if (target_el !== this.element) {
-              offset = parseFloat(target_el.firstChild.style.marginLeft)
-              if (!offset) { offset = 0; }
-              el.firstChild.style.marginLeft = (offset + 10) + 'px';
+              var offset = 0;
+              if (target_el !== this.element) {
+                offset = parseFloat(target_el.firstChild.style.marginLeft)
+                if (!offset) { offset = 0; }
+                el.firstChild.style.marginLeft = (offset + 10) + 'px';
+              }
+              this.sort();
             }
-            this.sort();
+          }
+          else
+          {
+            target = e.dataTransfer.getData('dragfolder');
+            if (target) {
+              var target_el = this.getNearestList(e.target);
+              var el = this.getElementByPath(target);
+              if (el) {
+                //var con = this.getContextByPath(this.getPath(el));
+                var new_path = this.getPath(target_el);
+                var file_contexts = [];
+                for(var f of el.querySelectorAll('li'))
+                {
+                  file_contexts.push(this.getContextByPath(this.getPath(f)));
+                }
+                for(var c of file_contexts)
+                {
+                  
+                }
+                console.log(new_path);
+                //target_el.appendChild(el);
+
+                /*
+                //var newpath = this.getPath(target_el) + '\\' + el.id;
+                //con.path = newpath;
+
+                var offset = 0;
+                if (target_el !== this.element) {
+                  offset = parseFloat(target_el.firstChild.style.marginLeft)
+                  if (!offset) { offset = 0; }
+                  el.firstChild.style.marginLeft = (offset + 10) + 'px';
+                }
+                //this.sort();
+                */
+              }
+              
+            }
           }
         });
+
+
+        ul.setAttribute('draggable', true);
+        ul.addEventListener('dragstart', (e) => {
+          e.dataTransfer.setData('dragfolder', this.getPath(e.target));
+        });
+
 
         ul.id = name;
         ul.classList.add('tree_element');
@@ -1003,9 +1079,10 @@
         const li = document.createElement('li');
         li.id = file;
         li.classList.add('tree_element');
+
         li.setAttribute('draggable', true);
         li.addEventListener('dragstart', (e) => {
-          e.dataTransfer.setData('target', this.getPath(e.target));
+          e.dataTransfer.setData('dragfile', this.getPath(e.target));
         });
 
         const node_wrapper = document.createElement('div');
@@ -1081,6 +1158,16 @@
         
         for (var ul of para) {
           this.sort(ul);
+        }
+        if(div == this.element)
+        {
+          if(div.querySelector('.tree_empty'))
+          {
+            div.querySelector('.tree_empty').remove();
+          }
+          var empty = document.createElement('div');
+          empty.classList.add('tree_empty');
+          div.appendChild(empty); 
         }
       }
 
@@ -1160,8 +1247,8 @@
     const tree_file = new Tree('tree_file');
 
     tree_file.addFolder('te');
-    tree_file.addFile('z');
-    tree_file.addFile('c');
+    tree_file.addFile('a');
+    tree_file.addFile('b');
     tree_file.addFolder('ee');
     tree_file.addFile('v');
     tree_file.addFile('e');

@@ -312,6 +312,9 @@ li.list_selected {
     padding-left : 25px;
     height: 20px;
 }
+.tree_empty{
+    margin-bottom: 40px
+}
 
 
 #contextMenu { 
