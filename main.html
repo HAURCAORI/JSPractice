@@ -790,6 +790,9 @@
       selection;
       list_context = [];
       rename_temp;
+      drag_element;
+      drag_target;
+      is_drag = false;
       constructor(id) {
         this.element = document.getElementById(id);
         this.current_node = this.element;
@@ -905,28 +908,39 @@
         folder_text.id = name;
         node_wrapper.appendChild(folder_text);
 
-        ul.id = name;
-        ul.classList.add('tree_element');
-        //ul.setAttribute('draggable', true);
-        ul.setAttribute('droppable', true);
-        ul.addEventListener('dragover', (e) => {
+        /*
+        node_wrapper.addEventListener('mouseenter', (e) => {
+        });
+        */
+        node_wrapper.setAttribute('droppable', true);
+        node_wrapper.addEventListener('dragover', (e) => {
           e.preventDefault();
         });
-        ul.addEventListener('drop', (e) => {
+        node_wrapper.addEventListener('drop', (e) => {
           e.preventDefault();
           var target = e.dataTransfer.getData('target');
           var target_el = this.getNearestList(e.target)
           var el = this.getElementByPath(target);
-          target_el.appendChild(el);
+          if(el)
+          {
+            var con = this.getContextByPath(this.getPath(el));
+            target_el.appendChild(el);
 
-          var offset = 0;
-          if (target_el !== this.element) {
-            offset = parseFloat(target_el.firstChild.style.marginLeft)
-            if (!offset) { offset = 0; }
-            el.firstChild.style.marginLeft = (offset + 10) + 'px';
+            var newpath = this.getPath(target_el) + '\\' + el.id;
+            con.path = newpath;
+
+            var offset = 0;
+            if (target_el !== this.element) {
+              offset = parseFloat(target_el.firstChild.style.marginLeft)
+              if (!offset) { offset = 0; }
+              el.firstChild.style.marginLeft = (offset + 10) + 'px';
+            }
+            this.sort();
           }
-          this.sort();
         });
+
+        ul.id = name;
+        ul.classList.add('tree_element');
 
         ul.appendChild(node_wrapper);
         this.current_node.appendChild(ul);
@@ -978,7 +992,7 @@
       }
 
       addFile(file) {
-        const check = this.current_node.querySelectorAll('#' + this.current_node.id + ' > li');
+        const check = this.current_node.querySelectorAll(':scope > li');
         for (const c of check) {
           if (c.id == file) {
             alert('same file name');
@@ -993,7 +1007,6 @@
         li.addEventListener('dragstart', (e) => {
           e.dataTransfer.setData('target', this.getPath(e.target));
         });
-
 
         const node_wrapper = document.createElement('div');
         node_wrapper.classList.add('tree_bar');
@@ -1034,6 +1047,7 @@
         });
         file_text.addEventListener('dblclick', (e) => {
           const c = this.getContextByPath(this.getPath(e.target.parentElement.parentElement));
+          console.log(c);
           tabs_code.addTab(c);
         });
         file_text.addEventListener('focusout', (e) => {
@@ -1049,22 +1063,22 @@
       }
 
       sort(div = this.element) {
-        var para = div.querySelectorAll('#' + div.id + ' > ul');
+        var para = div.querySelectorAll(':scope > ul'); //폴더
         var paraArr = [].slice.call(para).sort(function (a, b) {
           return a.id > b.id ? 1 : -1;
         });
         paraArr.forEach(function (p) {
           div.appendChild(p);
         });
-
-        var para2 = div.querySelectorAll('#' + div.id + ' > li');
+        
+        var para2 = div.querySelectorAll(':scope > li'); //파일
         var paraArr2 = [].slice.call(para2).sort(function (a, b) {
           return a.id > b.id ? 1 : -1;
         });
         paraArr2.forEach(function (p) {
           div.appendChild(p);
         });
-
+        
         for (var ul of para) {
           this.sort(ul);
         }
@@ -1127,7 +1141,7 @@
         var e = this.element;
         for(var i = 1; i < p.length; i++)
         {
-          e = e.querySelector('#' + p[i].replace(/\./g,'\\\.'));
+          e = e.querySelector('#' + e.id + ' > #' + p[i].replace(/\./g,'\\\.'));
         }
         return e;
       }

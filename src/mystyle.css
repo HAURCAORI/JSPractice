@@ -267,7 +267,21 @@ li.list_selected {
     height : calc(100% - 26px);
     color: var(--color-text);
     font-size: 11px;
+    overflow-y: auto;
 }
+.tree::-webkit-scrollbar {
+    width: 10px;
+}
+.tree::-webkit-scrollbar-thumb {
+    background-color: var(--color-light);
+}
+.tree::-webkit-scrollbar-track {
+    background-color: var(--color-basic);
+}
+.tree::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color-light2);
+}
+
 .tree_element{
     width: 100%;
     line-height: 20px;
