@@ -802,7 +802,6 @@
             }
           }
         });
-
         document.getElementById('cm_newfile').addEventListener('click', (event) => {
           var input = prompt('Create File', 'empty.txt');
           if (input == '') {
@@ -914,7 +913,6 @@
           e.preventDefault();
         });
         ul.addEventListener('drop', (e) => {
-          console.log(e.target);
           e.preventDefault();
           var target = e.dataTransfer.getData('target');
           var target_el = this.getNearestList(e.target)
