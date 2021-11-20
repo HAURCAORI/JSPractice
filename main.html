@@ -91,7 +91,7 @@
       }
     };
 
-    const editor = (el, c,  highlight = js, tab = '    ') => {
+    const editor = (el, c, highlight = js, tab = '    ') => {
       //caret 위치 관련
       const caret = () => {
         const range = window.getSelection().getRangeAt(0);
@@ -389,12 +389,12 @@
         }
 
       });
-      
+
       el.addEventListener('trigger', (event) => {
         save();
       });
 
-      function save(){
+      function save() {
         var text = '';
         for (const node of el.children) {
           text += node.innerHTML
@@ -651,8 +651,7 @@
 
       addTab(context) {
         for (var c of this.tab_context) {
-          if(c.path == context.path)
-          {
+          if (c.path == context.path) {
             this.focus(c.tab_id);
             return;
           }
@@ -680,8 +679,7 @@
         tab_close.classList.add('tab_close');
         tab_close.innerHTML = '×';
         tab_close.addEventListener('click', (event) => {
-          if (context.edited == true)
-          {
+          if (context.edited == true) {
             if (confirm("Save File '" + context.file_name + "'?") == true) {
               code_editor.dispatchEvent(ev);
             }
@@ -728,17 +726,15 @@
         context.current_tab = this.count;
         this.tab_context.push(context);
         code_editor.focus();
-        
+
         editor(code_editor, context);
       }
 
-      rename()
-      {
+      rename() {
         var li = this.ul.querySelectorAll('li');
         for (var i = 0; i < li.length; i++) {
           const t = this.tab_context[i].file_name;
-          if(li[i].firstChild.innerText != t)
-          {
+          if (li[i].firstChild.innerText != t) {
             li[i].firstChild.innerText = t;
           }
         }
@@ -770,7 +766,7 @@
   </script>
 
   <script>
-    function FileContext(){
+    function FileContext() {
       var context = {
         //Common
         file_name: '', //파일 이름
@@ -779,7 +775,7 @@
         data: '', //데이터
         edited: false,
         //editor 관련 속성
-        current_line: 0, 
+        current_line: 0,
         current_indent: 0,
         tab_id: 0,
         current_tab: 0,
@@ -809,53 +805,47 @@
 
         document.getElementById('cm_newfile').addEventListener('click', (event) => {
           var input = prompt('Create File', 'empty.txt');
-          if(input == '')
-          {
+          if (input == '') {
             alert('File name is null.')
             return;
           }
           const li = tree_file.addFile(input);
-          if(li)
-          {
-          if (this.selection) {
-            this.selection.classList.remove('selected');
-          }
-          this.selection = li;
-          this.selection.classList.add('selected');
-          this.current_node = this.selection.parentElement;
+          if (li) {
+            if (this.selection) {
+              this.selection.classList.remove('selected');
+            }
+            this.selection = li;
+            this.selection.classList.add('selected');
+            this.current_node = this.selection.parentElement;
           }
           this.sort();
         });
         document.getElementById('cm_newfolder').addEventListener('click', (event) => {
           var input = prompt('Create Folder', 'empty');
-          if(input == '')
-          {
+          if (input == '') {
             alert('Folder name is null.')
             return;
           }
           const ul = tree_file.addFolder(input);
-          if(ul)
-          {
-          if (this.selection) {
-            this.selection.classList.remove('selected');
-          }
-          this.selection = ul;
-          this.selection.classList.add('selected');
-          this.current_node = ul;
+          if (ul) {
+            if (this.selection) {
+              this.selection.classList.remove('selected');
+            }
+            this.selection = ul;
+            this.selection.classList.add('selected');
+            this.current_node = ul;
           }
           this.sort();
         });
         document.getElementById('cm_delete').addEventListener('click', (event) => {
           const t = this.getPath(this.selection);
           var valid = false;
-          if(this.selection.tagName == 'UL')
-          {
+          if (this.selection.tagName == 'UL') {
             if (confirm("Delete all files in a folder?") == true) {
-              const regex = new RegExp('^' + t.replace(/\\/g,"\\\\"), 'gi');
-              for(var i = 0; i < this.list_context.length;) {
-                if(this.list_context[i].path.match(regex))
-                {
-                  this.list_context.splice(i,1);
+              const regex = new RegExp('^' + t.replace(/\\/g, "\\\\"), 'gi');
+              for (var i = 0; i < this.list_context.length;) {
+                if (this.list_context[i].path.match(regex)) {
+                  this.list_context.splice(i, 1);
                   continue;
                 }
                 i++
@@ -866,18 +856,16 @@
             return;
           }
           if (confirm("Delete \'" + this.selection.id + "\'?") == true) {
-            for(var i = 0; i < this.list_context.length; i++) {
-              if(this.list_context[i].path == t)
-              {
-                this.list_context.splice(i,1);
+            for (var i = 0; i < this.list_context.length; i++) {
+              if (this.list_context[i].path == t) {
+                this.list_context.splice(i, 1);
                 valid = true;
                 this.selection.remove();
                 this.selection = this.element
                 break;
               }
             }
-            if(!valid)
-            {
+            if (!valid) {
               alert('Error');
             }
           }
@@ -888,8 +876,7 @@
           this.rename_temp = this.selection.querySelector('.tree_text').innerText;
         });
         document.addEventListener('keydown', (e) => {
-          if(e.which == 113 && this.selection.classList.contains('tree_element'))
-          {
+          if (e.which == 113 && this.selection.classList.contains('tree_element')) {
             this.selection.querySelector('.tree_text').setAttribute('contenteditable', 'true');
             this.selection.querySelector('.tree_text').focus();
             this.rename_temp = this.selection.querySelector('.tree_text').innerText;
@@ -899,9 +886,8 @@
 
       addFolder(name) {
         const check = this.current_node.querySelectorAll('#' + this.current_node.id + ' > ul');
-        for(const c of check)
-        {
-          if(c.id == name){
+        for (const c of check) {
+          if (c.id == name) {
             alert('same folder name');
             return false;
           }
@@ -922,6 +908,28 @@
 
         ul.id = name;
         ul.classList.add('tree_element');
+        //ul.setAttribute('draggable', true);
+        ul.setAttribute('droppable', true);
+        ul.addEventListener('dragover', (e) => {
+          e.preventDefault();
+        });
+        ul.addEventListener('drop', (e) => {
+          console.log(e.target);
+          e.preventDefault();
+          var target = e.dataTransfer.getData('target');
+          var target_el = this.getNearestList(e.target)
+          var el = this.getElementByPath(target);
+          target_el.appendChild(el);
+
+          var offset = 0;
+          if (target_el !== this.element) {
+            offset = parseFloat(target_el.firstChild.style.marginLeft)
+            if (!offset) { offset = 0; }
+            el.firstChild.style.marginLeft = (offset + 10) + 'px';
+          }
+          this.sort();
+        });
+
         ul.appendChild(node_wrapper);
         this.current_node.appendChild(ul);
 
@@ -934,7 +942,7 @@
 
         node_wrapper.addEventListener('click', (event) => {
           if (this.selection) {
-              this.selection.classList.remove('selected');
+            this.selection.classList.remove('selected');
           }
           if (event.target.id) {
             this.selection = event.target.parentElement.parentElement;
@@ -963,8 +971,7 @@
           this.rename(e.target);
         });
         folder_text.addEventListener('keydown', (e) => {
-          if(e.which == '13')
-          {
+          if (e.which == '13') {
             e.preventDefault();
             this.rename(e.target);
           }
@@ -974,9 +981,8 @@
 
       addFile(file) {
         const check = this.current_node.querySelectorAll('#' + this.current_node.id + ' > li');
-        for(const c of check)
-        {
-          if(c.id == file){
+        for (const c of check) {
+          if (c.id == file) {
             alert('same file name');
             return false;
           }
@@ -986,6 +992,11 @@
         li.id = file;
         li.classList.add('tree_element');
         li.setAttribute('draggable', true);
+        li.addEventListener('dragstart', (e) => {
+          e.dataTransfer.setData('target', this.getPath(e.target));
+        });
+
+
         const node_wrapper = document.createElement('div');
         node_wrapper.classList.add('tree_bar');
         const file_icon = document.createElement('div');
@@ -1015,7 +1026,7 @@
 
         node_wrapper.addEventListener('click', (event) => {
           if (this.selection) {
-              this.selection.classList.remove('selected');
+            this.selection.classList.remove('selected');
           }
           if (event.target.id) {
             this.selection = event.target.parentElement.parentElement;
@@ -1031,16 +1042,15 @@
           this.rename(e.target);
         });
         file_text.addEventListener('keydown', (e) => {
-          if(e.which == '13')
-          {
+          if (e.which == '13') {
             e.preventDefault();
             this.rename(e.target);
           }
         });
         return li;
       }
-      
-      sort(div = this.element){
+
+      sort(div = this.element) {
         var para = div.querySelectorAll('#' + div.id + ' > ul');
         var paraArr = [].slice.call(para).sort(function (a, b) {
           return a.id > b.id ? 1 : -1;
@@ -1057,84 +1067,93 @@
           div.appendChild(p);
         });
 
-        for(var ul of para)
-        {
+        for (var ul of para) {
           this.sort(ul);
         }
       }
 
-      rename(target){
+      rename(target) {
+        target.setAttribute('contenteditable', 'false');
+        if (target.innerText == '') {
+          target.innerText = this.rename_temp;
+          return;
+        }
+
         var parent = this.getNearestList(target);
-        if(parent.tagName == 'UL') //폴더
+        if (parent.tagName == 'UL') //폴더
         {
 
+          const path = this.getPath(parent);
+          const regex = new RegExp('^' + path.replace(/\\/g, '\\\\') + '\\\\', 'i');
+          var newpath = path.substring(0, path.lastIndexOf('\\') + 1) + target.innerText + '\\';
+          for (var i = 0; i < this.list_context.length; i++) {
+            if (this.list_context[i].path.match(regex)) {
+              this.list_context[i].path = this.list_context[i].path.replace(regex, newpath);
+            }
+          }
         }
-        else if(parent.tagName == 'LI') //파일
+        else if (parent.tagName == 'LI') //파일
         {
           var con = this.getContextByPath(this.getPath(parent));
           con.file_name = target.innerText;
           const regex = new RegExp('\\\\' + this.rename_temp + '\$', 'gi');
-          con.path = con.path.replace(regex,'\\' + target.innerText);
+          con.path = con.path.replace(regex, '\\' + target.innerText);
           tabs_code.rename();
         }
 
-
-        target.setAttribute('contenteditable', 'false');
-        if(target.innerText == '')
-        {
-          target.innerText = this.rename_temp;
-          return;
-        }
         target.id = target.innerText;
         parent.id = target.innerText;
       }
-      getPath(target){
+      getPath(target) {
         var path = '';
         var temp = target.parentElement;
-        if(temp.id && temp !== this.element)
-        {
+        if (temp.id && temp !== this.element) {
           path += this.getPath(temp);
           path += '\\' + target.id;
         }
-        else
-        {
-          path += '\\' +target.id;
-        } 
+        else {
+          path += '\\' + target.id;
+        }
         return path;
       }
-      
-      getContextByPath(path)
-      {
-        for(var i = 0; i < this.list_context.length; i++)
-        {
-          if(this.list_context[i].path == path)
-          {
-            return(this.list_context[i]);
+
+      getContextByPath(path) {
+        for (var i = 0; i < this.list_context.length; i++) {
+          if (this.list_context[i].path == path) {
+            return (this.list_context[i]);
           }
         }
       }
-
-      getNearestList(target){
-        if(target.tagName == 'UL' || target.tagName == 'LI')
+      getElementByPath(path) {
+        var p = path.split('\\');
+        var e = this.element;
+        for(var i = 1; i < p.length; i++)
         {
+          e = e.querySelector('#' + p[i].replace(/\./g,'\\\.'));
+        }
+        return e;
+      }
+      getNearestList(target) {
+        if (target.tagName == 'UL' || target.tagName == 'LI') {
           return target;
         }
-        else if(target.tagName !== 'HTML')
-        {
+        else if (target.tagName !== 'HTML') {
           return this.getNearestList(target.parentElement);
         }
         return null;
       }
+
+     
     }
     const tree_file = new Tree('tree_file');
-    
+
     tree_file.addFolder('te');
     tree_file.addFile('z');
     tree_file.addFile('c');
     tree_file.addFolder('ee');
     tree_file.addFile('v');
     tree_file.addFile('e');
-    
+
     tree_file.sort(tree_file.element);
     tree_file.element.addEventListener("contextmenu", function (event) {
       if (document.getElementById("contextMenu").style.display == "block") {
@@ -1144,15 +1163,12 @@
         menu.style.display = 'block';
         menu.style.left = event.pageX + "px";
         menu.style.top = event.pageY + "px";
-        if(tree_file.selection)
-        {
-          if(tree_file.selection.className == 'tree')
-          {
+        if (tree_file.selection) {
+          if (tree_file.selection.className == 'tree') {
             menu.querySelector('#cm_delete').style.display = 'none';
             menu.querySelector('#cm_rename').style.display = 'none';
           }
-          else
-          {
+          else {
             menu.querySelector('#cm_delete').style.display = '';
             menu.querySelector('#cm_rename').style.display = '';
           }
