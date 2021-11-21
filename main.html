@@ -10,6 +10,25 @@
 
 <body>
   <div id="header-wrapper">
+    <div id="menu_bar">
+      <ul>
+        <li id="menu-file">
+          <u>F</u>ile
+        </li>
+        <li id="menu-edit">
+          <u>E</u>dit
+        </li>
+        <li id="menu-view">
+            <u>V</u>iew
+          </li>
+      </ul>
+    </div>
+    
+    <div class="toolbar">
+
+    </div>
+
+    <!--
     <div class="file_dialog">
       개별파일 열기
       <input type="file" id="open_file" class="inputfile" />
@@ -20,7 +39,7 @@
       <input id="open_directory" type="file" webkitdirectory directory />
       <label for="open_directory">업로드</label>
     </div>
-
+  -->
   </div>
   <div id="workspace">
     <div class="panel-left-bar">
@@ -59,7 +78,54 @@
       <li id="cm_delete" style="display:none">Delete</li>
     </ul>
   </div>
-
+  <!--
+    menu bar 항목
+  -->
+  <div id="menu-file-contents" class="menu_bar_box" style="display:none">
+    <ul class="menu_bar_list">
+      <li id="file-newfile">New File</li>
+      <div class='list_divide'></div>
+      <li id="file-openfile">Open File</li>
+      <li id="file-openfolder">Open Folder</li>
+      <div class='list_divide'></div>
+      <li id="file-save">Save</li>
+      <li id="file-saveall">Save All</li>
+      <div class='list_divide'></div>
+      <li id="file-exit">Exit</li>
+    </ul>
+  </div>
+  <div id="menu-edit-contents" class="menu_bar_box" style="display:none">
+    <ul class="menu_bar_list">
+      <li id="edit-intelli">
+        <div class="menu_checkbox">✓</div>
+        Intellisense
+      </li>
+      <div class='list_divide'></div>
+      <li id="edit-find">Find</li>
+    </ul>
+  </div>
+  <div id="menu-view-contents" class="menu_bar_box" style="display:none">
+      <ul class="menu_bar_list">
+        <li id="view_highlight">
+          <div class="menu_checkbox">✓</div>
+          Highlight
+        </li>
+        <li id="view_option">
+            Option
+            <div class="menu_extend">＞</div>
+          </li>
+      </ul>
+    </div>
+    <div id="view_option-contents" class="menu_bar_box" style="display:none">
+        <ul class="menu_bar_list">
+          <li id="option-a">
+            a
+          </li>
+          <li id="option-b">
+            b
+          </li>
+        </ul>
+      </div>
   <script>
     const bt_html = document.getElementById('bt_html');
     bt_html.addEventListener('click', (event) => {
@@ -176,7 +242,6 @@
 
         if (e.ctrlKey && e.which == 86)//ctrl + v
         {
-
           correct = true;
         }
 
@@ -199,6 +264,7 @@
           }
           if (e.shiftKey && e.which === 221) {//}
             c.current_indent--;
+            
             if (c.current_div_indent >= 1) {
               removeTab();
             }
@@ -301,6 +367,7 @@
           }
           count++;
         }
+
         c.current_indent = 0;
         c.current_indent += (str.match(/\{/g) || []).length;
         c.current_indent -= (str.match(/\}/g) || []).length;
@@ -319,6 +386,7 @@
         prefix.selectNodeContents(c.current_div);
         prefix.setEnd(range.endContainer, 4);
         prefix.deleteContents();
+        
       }
       function insertIntelli() {
         var str = intellisense.liSelected.innerHTML;
@@ -745,6 +813,7 @@
 
     const tabs_code = new Tab('tabs_code');
 
+    /*
     const bt_openfile = document.getElementById('open_file');
     bt_openfile.onchange = function (event) {
       var file = event.target.files[0];
@@ -759,6 +828,7 @@
       };
       reader.readAsText(file, 'UTF-8');
     };
+    */
   </script>
 
   <script>
@@ -1365,6 +1435,107 @@
     });
 
   </script>
-</body>
+  <script>
+    const menu_assign = () => {
+      var isclicked = false;
+      var onmenu = false;
+      const el = document.getElementById('menu_bar');
+      el.addEventListener('mouseleave', (e) => {
+        isclicked = false;
+      });
+      const menu_list = ['menu-file', 'menu-edit', 'menu-view'];
+      for (var m of menu_list) {
+        append(m) 
+      }
 
+      function append(m,parent = null) {
+        const menu_element = document.getElementById(m);
+        const menu_element_contents = document.getElementById(m + '-contents');
+        if (menu_element && menu_element_contents) {
+          menu_element.addEventListener('click', (e) => {
+            isclicked = true;
+            onmenu = true;
+            const rect = menu_element.getBoundingClientRect();
+            if (menu_element_contents.style.display == "block") {
+              menu_element_contents.style.display = "none"
+            } else {
+              menu_element_contents.style.display = 'block';
+              if(parent)
+              {
+                menu_element_contents.style.left = (rect.left + 200) + 'px';
+                menu_element_contents.style.top = (rect.top - 2.5) + 'px';
+              }
+              else
+              {
+                menu_element_contents.style.left = rect.left + 'px';
+                menu_element_contents.style.top = (rect.top + 20) + 'px';
+              }
+            }
+          });
+          menu_element.addEventListener('mouseenter', (e) => {
+            onmenu = true;
+            if(isclicked)
+            {
+              const rect = menu_element.getBoundingClientRect();
+              menu_element_contents.style.display = 'block';
+              if(parent)
+              {
+                menu_element_contents.style.left = (rect.left + 200) + 'px';
+                menu_element_contents.style.top = (rect.top - 2.5) + 'px';
+              }
+              else
+              {
+                menu_element_contents.style.left = rect.left + 'px';
+                menu_element_contents.style.top = (rect.top + 20) + 'px';
+              }
+            }
+          });
+          menu_element.addEventListener('mouseleave', (e) => {
+            if(isclicked)
+            {
+              menu_element_contents.style.display = "none";
+              onmenu = false;
+            }
+          });
+          menu_element_contents.addEventListener('mouseenter', (e) => {
+            if(parent)
+            {
+              parent.style.display = 'block';
+            }
+            menu_element_contents.style.display = 'block';
+            onmenu = true;
+          });
+          menu_element_contents.addEventListener('mouseleave', (e) => {
+            menu_element_contents.style.display = "none";
+            onmenu = false;
+          });
+
+          for(var c of menu_element_contents.querySelectorAll('li'))
+          {
+            if(c.childNodes.length>1)
+            {
+              if(c.querySelector('.menu_extend'))
+              {
+                append(c.id, menu_element_contents);
+              }
+            }
+            
+          }
+        }
+      }
+
+      document.addEventListener('click', (e) => {
+        if(!onmenu)
+        {
+          for(var m of document.querySelectorAll('.menu_bar_box'))
+          {
+            m.style.display = "none";
+          }
+        }
+      
+      });
+    };
+    menu_assign();
+  </script>
+  </body>
 </html>

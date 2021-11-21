@@ -1,5 +1,6 @@
 :root{
     --color-dark: #181818;
+    --color-white: #e0e0e0;
     --color-light: #949494;
     --color-light2: #a7a7a7;
     --color-basic: #252525;
@@ -8,6 +9,7 @@
     --color-blue: #2e8eca;
     --color-border-light: #4d4d4d;
     --color-border-dark: #3b3b3b;
+    --color-selected-white: #7e7e7e;
     --color-selected-blue: #297dc27e;
     --color-selected-gray: #5e5e5e77;
     --color-text: #ffffff;
@@ -19,13 +21,82 @@ body{
 }
 
 #header-wrapper{
-    height: 50px;
+    height: 45px;
     background-color:var(--color-dark);
+}
+
+#menu_bar{
+    width: 100%;
+    height: 20px;
+    border-bottom: 1px solid var(--color-border-dark);
+}
+
+#menu_bar > ul{
+    position: relative;
+    margin: 0;
+    padding: 0; 
+    list-style:none;
+    display:flex;
+}
+#menu_bar li{
+    text-align:center;
+    max-width: 60px;
+    line-height: 20px;
+    flex:auto;
+    font-size: 12px;
+    color: var(--color-text);
+    cursor: default;
+}
+#menu_bar li:hover{
+    background-color:var(--color-selected-white);
+}
+.menu_bar_box{
+    position: absolute;
+    width: 200px;
+    min-height: 20px;
+    overflow: hidden;
+    font-size: 12px;
+    background-color: var(--color-white);
+    box-shadow: 5px 5px 7px var(--color-dark);
+}
+.menu_bar_box ul {
+    margin: 0;
+    padding: 2.5px 0 2.5px 0;
+    list-style: none;
+    position: relative;
+}
+.menu_bar_box li {
+    width : 200px;
+    margin: 0;
+    padding: 0;
+    line-height: 20px;
+    padding-left: 20px;
+    cursor: default;
+}
+.menu_bar_box li:hover {
+    background-color: var(--color-selected-blue);
+}
+.menu_bar_box .list_divide{
+    height: 2.5px;
+    margin-bottom: 2.5px;
+    border-bottom: 1px solid var(--color-light2);
+}
+.menu_checkbox {
+    width: 10px;
+    margin-left : -12px;
+    display: inline-block;
+}
+.menu_extend {
+    width: 10px;
+    right: 0px;
+    position: absolute;
+    margin-right : 10px;
+    display: inline-block;
 }
 
 #workspace{
     width: 100%;
-    height: calc(100% - 50px);
+    height: calc(100% - 45px);
     position: absolute;
 }
 
@@ -215,11 +286,11 @@ body{
       color: var(--color-text);
       box-shadow: 5px 5px 7px var(--color-dark);
   }
-  ul.list {
+ul.list {
     list-style: none;
     margin: 0px;
     padding: 0px;
-  }
+}
   ul.list li{
     height: 15px;
     padding: 2px 0px 2px 10px;
@@ -311,7 +382,6 @@ li.list_selected {
     position: absolute;
     width: 200px;
     min-height: 20px;
-    background: #f2f4f6;
     overflow: hidden;
     font-size: 12px;
 } 
