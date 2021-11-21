@@ -118,7 +118,7 @@ body{
     border-radius: .25em;
 }
 
-.file_dialog input[type="file"]
+input[type="file"]
 {
     position: absolute;
     width: 1px;

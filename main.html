@@ -85,7 +85,10 @@
     <ul class="menu_bar_list">
       <li id="file-newfile">New File</li>
       <div class='list_divide'></div>
-      <li id="file-openfile">Open File</li>
+      <li id="file-openfile">
+        <input type="file" id="open_file" class="inputfile" />
+        <label for="open_file">Open File</label>
+      </li>
       <li id="file-openfolder">Open Folder</li>
       <div class='list_divide'></div>
       <li id="file-save">Save</li>
@@ -264,14 +267,21 @@
           }
           if (e.shiftKey && e.which === 221) {//}
             c.current_indent--;
-            
-            if (c.current_div_indent >= 1) {
+
+            const range = window.getSelection().getRangeAt(0);
+            const prefix = range.cloneRange();
+            prefix.selectNodeContents(el);
+            prefix.setEnd(range.endContainer, range.endOffset);
+            const str = prefix.toString();
+            var global_indent= 0;
+            global_indent += (str.match(/\{/g) || []).length;
+            global_indent -= (str.match(/\}/g) || []).length;
+            if (c.current_div_indent >= global_indent) {
               removeTab();
             }
           }
           if (e.which === 13) {//enter
             addLine();
-
             for (var i = 0; i < Math.floor(c.current_div_indent) + c.current_indent; i++) {
               insertTab();
             }
@@ -384,9 +394,9 @@
         const range = window.getSelection().getRangeAt(0);
         const prefix = range.cloneRange();
         prefix.selectNodeContents(c.current_div);
+        prefix.setStart(range.endContainer,0);
         prefix.setEnd(range.endContainer, 4);
-        prefix.deleteContents();
-        
+        prefix.deleteContents(); 
       }
       function insertIntelli() {
         var str = intellisense.liSelected.innerHTML;
@@ -733,7 +743,6 @@
         text.innerText = context.file_name;
         tab.appendChild(text);
         tab.addEventListener('click', (event) => {
-          console.log(event.target);
           if (event.target.id != '' && event.target.id != 'tab_text') {
             this.focus(event.target.id);
           }
@@ -812,23 +821,6 @@
     }
 
     const tabs_code = new Tab('tabs_code');
-
-    /*
-    const bt_openfile = document.getElementById('open_file');
-    bt_openfile.onchange = function (event) {
-      var file = event.target.files[0];
-      if (!file) {
-        return;
-      }
-
-      var reader = new FileReader();
-      reader.onload = function (e) {
-        fileData = e.target.result;
-        tabs_code.addTab(file.name, fileData);
-      };
-      reader.readAsText(file, 'UTF-8');
-    };
-    */
   </script>
 
   <script>
@@ -1536,6 +1528,23 @@
       });
     };
     menu_assign();
+    const bt_openfile = document.getElementById('open_file');
+    bt_openfile.onchange = function (event) {
+      var file = event.target.files[0];
+      if (!file) {
+        return;
+      }
+
+      var reader = new FileReader();
+      reader.onload = function (e) {
+        fileData = e.target.result;
+        const ct = FileContext();
+        ct.file_name = file.name;
+        ct.data = fileData;
+        tabs_code.addTab(ct);
+      };
+      reader.readAsText(file, 'UTF-8');
+    };
   </script>
   </body>
 </html>
