@@ -592,12 +592,6 @@
         this.element.appendChild(ul);
         this.element.appendChild(div);
 
-        var bt_add = document.createElement('div');
-        bt_add.id = 'tab_add';
-        bt_add.classList.add('tab_add');
-        bt_add.innerHTML = '+';
-        this.element.appendChild(bt_add);
-
         this.ul = this.element.querySelector('ul');
         this.contents = this.element.querySelector('div');
       }
@@ -609,7 +603,6 @@
             li[this.previous - 1].classList.remove('tab_current');
             con[this.previous - 1].style.display = 'none';
           }
-
           li[index - 1].classList.add('tab_current');
           con[index - 1].style.display = 'block';
           this.previous = index;
@@ -668,11 +661,20 @@
         tab.classList.add('tab');
         tab.id = this.count;
         var text = document.createElement('div');
+        text.id = 'tab_text';
         text.innerText = context.file_name;
         tab.appendChild(text);
         tab.addEventListener('click', (event) => {
-          if (event.target.id != "") {
+          console.log(event.target);
+          if (event.target.id != '' && event.target.id != 'tab_text') {
             this.focus(event.target.id);
+          }
+          if (event.target.id == 'tab_text')
+          {
+            if(event.target.parentElement.id != '')
+            {
+              this.focus(event.target.parentElement.id);
+            }
           }
         });
         var tab_close = document.createElement('div');
@@ -743,12 +745,6 @@
 
     const tabs_code = new Tab('tabs_code');
 
-    const tab_add = document.getElementById('tab_add');
-    tab_add.addEventListener('click', (event) => {
-      var input = prompt('Add Tab', 'empty.html');
-      tabs_code.addTab(input);
-    });
-
     const bt_openfile = document.getElementById('open_file');
     bt_openfile.onchange = function (event) {
       var file = event.target.files[0];
@@ -818,6 +814,14 @@
               var target_el = this.element;
               var el = this.getElementByPath(target);
               if (el) {
+                const check = target_el.querySelectorAll(':scope > li');
+                for (const c of check) {
+                  if (c.id == el.id) {
+                    alert('File with the same name exists');
+                  return false;
+                  }
+                }
+
                 var con = this.getContextByPath(this.getPath(el));
                 target_el.appendChild(el);
 
@@ -831,14 +835,60 @@
             else
             {
               target = e.dataTransfer.getData('dragfolder');
-              if(target)
-              {
+              if (target) {
+                var target_el = this.element;
+                var el = this.getElementByPath(target);
+                if (el) {
+                  //하위 폴더에 대한 이동 방지
+                  const valid = el.querySelectorAll('ul');
+                  for (const c of valid) {
+                    if (c == target_el) {
+                      return false;
+                    }
+                  }
+                  //같은 이름 존재시 이동 방지
+                  const check = target_el.querySelectorAll(':scope > ul');
+                  for (const c of check) {
+                    if (c.id == el.id && c != el) {
+                      alert('Folder with the same name exists');
+                      return false;
+                    }
+                  }
+
+                  var new_path = '\\' + el.id;
+                  var file_contexts = [];
+
+                  var offset = parseFloat(el.firstChild.style.marginLeft);
+                  if (!offset) { offset = 0; }
+
+                  el.firstChild.style.marginLeft = '';
+                  for (var f of el.querySelectorAll('li')) {
+                    file_contexts.push(this.getContextByPath(this.getPath(f)));
+                    var temp = parseFloat(f.firstChild.style.marginLeft)
+                    if (!temp) { temp = 0; }
+                    f.firstChild.style.marginLeft = (temp - offset) + 'px';
+                  }
+                  for(var f of el.querySelectorAll('ul'))
+                  {
+                    var temp = parseFloat(f.firstChild.style.marginLeft)
+                    if (!temp) { temp = 0; }
+                    f.firstChild.style.marginLeft = (temp - offset + 10) + 'px';
+                  }
+
+                  const regex = new RegExp('^' + target.replace(/\\/g, "\\\\"), 'gi');
+                  for (var c of file_contexts) {
+                    c.path = c.path.replace(regex, new_path);
+                  }
+
+                  target_el.appendChild(el);
+                  this.sort();
+                }
 
               }
             }
           }
         });
-
+                
 
         document.getElementById('cm_newfile').addEventListener('click', (event) => {
           var input = prompt('Create File', 'empty.txt');
@@ -953,7 +1003,16 @@
           if (target) {
             var target_el = this.getNearestList(e.target)
             var el = this.getElementByPath(target);
+
             if (el) {
+              const check = target_el.querySelectorAll(':scope > li');
+              for (const c of check) {
+                if (c.id == el.id) {
+                  alert('File with the same name exists');
+                return false;
+                }
+              }
+
               var con = this.getContextByPath(this.getPath(el));
               target_el.appendChild(el);
 
@@ -975,33 +1034,56 @@
             if (target) {
               var target_el = this.getNearestList(e.target);
               var el = this.getElementByPath(target);
-              if (el) {
-                //var con = this.getContextByPath(this.getPath(el));
-                var new_path = this.getPath(target_el);
+              if (el && el !== target_el) {
+                //하위 폴더에 대한 이동 방지
+                const valid = el.querySelectorAll('ul');
+                for(const c of valid)
+                {
+                  if(c == target_el)
+                  {
+                    return false;
+                  }
+                }
+                //같은 이름 존재시 이동 방지
+                const check = target_el.querySelectorAll(':scope > ul');
+                for (const c of check) {
+                  if (c.id == el.id && c != el) {
+                    alert('Folder with the same name exists');
+                    return false;
+                  }
+                }
+
+                var new_path = this.getPath(target_el)+ '\\' + el.id;
                 var file_contexts = [];
+
+                var offset_t = parseFloat(target_el.firstChild.style.marginLeft);
+                if (!offset_t) { offset_t = 0; }
+                var offset_e = parseFloat(el.firstChild.style.marginLeft);
+                if (!offset_e) { offset_e = 0; }
+                var offset = offset_e - offset_t;
+                el.firstChild.style.marginLeft = (offset_t + 10) + 'px';
                 for(var f of el.querySelectorAll('li'))
                 {
                   file_contexts.push(this.getContextByPath(this.getPath(f)));
+                  var temp = parseFloat(f.firstChild.style.marginLeft)
+                  if (!temp) { temp = 0; }
+                  f.firstChild.style.marginLeft = (temp - offset + 10) + 'px';
                 }
+                for(var f of el.querySelectorAll('ul'))
+                {
+                  var temp = parseFloat(f.firstChild.style.marginLeft)
+                  if (!temp) { temp = 0; }
+                  f.firstChild.style.marginLeft = (temp - offset + 10) + 'px';
+                }
+                
+                const regex = new RegExp('^' + target.replace(/\\/g, "\\\\"), 'gi');
                 for(var c of file_contexts)
                 {
-                  
+                  c.path = c.path.replace(regex,new_path);
                 }
-                console.log(new_path);
-                //target_el.appendChild(el);
-
-                /*
-                //var newpath = this.getPath(target_el) + '\\' + el.id;
-                //con.path = newpath;
-
-                var offset = 0;
-                if (target_el !== this.element) {
-                  offset = parseFloat(target_el.firstChild.style.marginLeft)
-                  if (!offset) { offset = 0; }
-                  el.firstChild.style.marginLeft = (offset + 10) + 'px';
-                }
-                //this.sort();
-                */
+                
+                target_el.appendChild(el);
+                this.sort();
               }
               
             }
@@ -1252,6 +1334,8 @@
     tree_file.addFolder('ee');
     tree_file.addFile('v');
     tree_file.addFile('e');
+    tree_file.addFolder('empty');
+    tree_file.addFile('empty.txt');
 
     tree_file.sort(tree_file.element);
     tree_file.element.addEventListener("contextmenu", function (event) {

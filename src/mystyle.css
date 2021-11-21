@@ -157,20 +157,10 @@ body{
     padding-right: 5px;
     cursor: default;
 }
-
-.tab_add{
-    width: 15px;
-    line-height: 15px;
-    right: 5px;
-    top: 2.5px;
-    position: absolute;
-	color: var(--color-text);
-    font-size: 15px;
-    cursor: pointer;
-    text-align: center;
-}
-.tab_add:hover{
-    background-color: #999;
+#tab_text{
+    margin: 0 15px 0 15px;
+    text-overflow: ellipsis;
+    overflow: hidden;
 }
 
 .editor {
