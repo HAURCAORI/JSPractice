@@ -117,6 +117,10 @@
             Option
             <div class="menu_extend">＞</div>
           </li>
+          <div class='list_divide'></div>
+          <li id="view_wordwrap">
+            Word Wrap
+          </li>
       </ul>
     </div>
     <div id="view_option-contents" class="menu_bar_box" style="display:none">
@@ -142,11 +146,15 @@
     // Syntax highlight for JS
     const js = el => {
       for (const node of el.children) {
-        var map = {
-          '<': '&lt',
-          '>': '&gt',
-        };
-        const s = node.innerText
+        if(node.className)
+        {
+          node.classList.remove('editor_node_changed');
+          var map = {
+            '<': '&lt',
+            '>': '&gt',
+          };
+        
+          const s = node.innerText
           .replace(/</g, '&lt').replace(/>/g, '&gt')
           .replace(/(\/\/.*)/g, '<em>$1</em>')
           .replace(
@@ -156,7 +164,8 @@
           .replace(/(".*?"|'.*?'|`.*?`)/g, '<strong><em>$1</em></strong>')
           .replace(/\b(\d+)/g, '<em><strong>$1</strong></em>');
 
-        node.innerHTML = s.split('\n').join('<br/>');
+          node.innerHTML = s.split('\n').join('<br/>');
+        }
       }
     };
 
@@ -242,7 +251,6 @@
         //console.log(e.which);
         getCurrentDiv();
         //editor 관련
-
         if (e.ctrlKey && e.which == 86)//ctrl + v
         {
           correct = true;
@@ -250,6 +258,7 @@
 
         if (!show_intellisense) {
           c.edited = true;
+          c.current_div.className = 'editor_node_changed';
           if (e.which === 8) {//backspace
             if (el.childElementCount <= 1) {
               const pos = caret();
@@ -779,7 +788,8 @@
           var lines = context.data.split(/\r\n|\n\r|\n|\r/);
           for (var temp of lines) {
             var empty = document.createElement('div');
-            empty.id = 'editor_line'
+            empty.id = 'editor_line';
+            empty.className = 'editor_node_changed';
 
             if (temp === '') {
               temp = "<br/>";
@@ -1541,6 +1551,7 @@
         const ct = FileContext();
         ct.file_name = file.name;
         ct.data = fileData;
+        ct.path = '\\' + file.name;
         tabs_code.addTab(ct);
       };
       reader.readAsText(file, 'UTF-8');
