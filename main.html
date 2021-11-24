@@ -89,7 +89,10 @@
         <input type="file" id="open_file" class="inputfile" />
         <label for="open_file">Open File</label>
       </li>
-      <li id="file-openfolder">Open Folder</li>
+      <li id="file-openfolder">
+        <input id="open_directory" type="file" webkitdirectory directory />
+        <label for="open_directory">Open Folder</label>
+      </li>
       <div class='list_divide'></div>
       <li id="file-save">Save</li>
       <li id="file-saveall">Save All</li>
@@ -156,14 +159,21 @@
         
           const s = node.innerText
           .replace(/</g, '&lt').replace(/>/g, '&gt')
-          .replace(/(\/\/.*)/g, '<em>$1</em>')
-          .replace(
-            /\b(new|if|else|do|while|switch|for|in|of|continue|break|return|typeof|function|var|const|let|\.length|\.\w+)(?=[^\w])/g,
-            '<strong>$1</strong>',
-          )
           .replace(/(".*?"|'.*?'|`.*?`)/g, '<strong><em>$1</em></strong>')
-          .replace(/\b(\d+)/g, '<em><strong>$1</strong></em>');
-
+          //.replace(/\b(\d+)/g, '<em><strong>$1</strong></em>')
+          .replace(/(\/\/.*)/g, '<span style=\"color:#6a9955\"><em>$1</em></span>')
+          .replace(
+            /\b(new|in|of|typeof|function|var|const|let|\.length|\.\w+)(?=[^\w])\b/g,
+            '<span style=\"color:#569cd6\">$1</span>')
+          .replace(
+            /\b(if|else|do|while|switch|for|continue|break|return)\b/g,
+            '<span style=\"color:#c586c0\">$1</span>');
+            /*
+          .replace(
+            /&lt\/?(html|head|body|title|div|ul|li|script|span).*&gt/gi,
+            '<span style=\"color:#569cd6\">$&</span>'
+          )
+          */
           node.innerHTML = s.split('\n').join('<br/>');
         }
       }
@@ -1043,12 +1053,16 @@
         });
       }
 
-      addFolder(name) {
+      addFolder(name, parent = null) {
+        if(parent)
+        {
+          this.current_node = parent;
+        }
         const check = this.current_node.querySelectorAll('#' + this.current_node.id + ' > ul');
         for (const c of check) {
           if (c.id == name) {
             alert('same folder name');
-            return false;
+            return c;
           }
         }
 
@@ -1160,6 +1174,8 @@
               
             }
           }
+
+          return ul;
         });
 
 
@@ -1221,7 +1237,7 @@
         return ul;
       }
 
-      addFile(file) {
+      addFile(file, ct = null) {
         const check = this.current_node.querySelectorAll(':scope > li');
         for (const c of check) {
           if (c.id == file) {
@@ -1229,7 +1245,8 @@
             return false;
           }
         }
-        const ul = this.current_node;
+
+        const ul = ct ? this.element : this.current_node;
         const li = document.createElement('li');
         li.id = file;
         li.classList.add('tree_element');
@@ -1261,9 +1278,12 @@
         li.appendChild(node_wrapper);
         ul.appendChild(li);
 
-        const ct = FileContext();
-        ct.file_name = file;
-        ct.path = this.getPath(li);
+        if(!ct)
+        {
+          ct = FileContext();
+          ct.file_name = file;
+          ct.path = this.getPath(li);
+        }
         this.list_context.push(ct);
 
         node_wrapper.addEventListener('click', (event) => {
@@ -1278,7 +1298,7 @@
         });
         file_text.addEventListener('dblclick', (e) => {
           const c = this.getContextByPath(this.getPath(e.target.parentElement.parentElement));
-          console.log(c);
+          //console.log(c);
           tabs_code.addTab(c);
         });
         file_text.addEventListener('focusout', (e) => {
@@ -1538,8 +1558,8 @@
       });
     };
     menu_assign();
-    const bt_openfile = document.getElementById('open_file');
-    bt_openfile.onchange = function (event) {
+
+    document.getElementById('open_file').onchange = function (event) {
       var file = event.target.files[0];
       if (!file) {
         return;
@@ -1553,9 +1573,37 @@
         ct.data = fileData;
         ct.path = '\\' + file.name;
         tabs_code.addTab(ct);
+        const li = tree_file.addFile(file.name, ct);
+          if (li) {
+            if (tree_file.selection) {
+              tree_file.selection.classList.remove('selected');
+            }
+            tree_file.selection = li;
+            tree_file.selection.classList.add('selected');
+            tree_file.current_node = tree_file.selection.parentElement;
+          }
+          tree_file.sort();
       };
       reader.readAsText(file, 'UTF-8');
     };
+    document.getElementById('file-newfile').addEventListener('click', (e) => {
+      var input = prompt('Create File', 'empty.txt');
+          if (input == null) {
+            alert('File name is null.')
+            return;
+          }
+          const li = tree_file.addFile(input);
+          if (li) {
+            if (tree_file.selection) {
+              tree_file.selection.classList.remove('selected');
+            }
+            tree_file.selection = li;
+            tree_file.selection.classList.add('selected');
+            tree_file.current_node = tree_file.selection.parentElement;
+          }
+          tree_file.sort();
+    });
+
   </script>
   </body>
 </html>
