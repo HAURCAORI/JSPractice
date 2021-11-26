@@ -673,7 +673,9 @@
               c[i].innerHTML = temp;
               c[i].className = 'editor_node_changed';
             }
-            while(index >= 0)
+            while(index >= 0)haurcaori
+            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
+
             {
               this.search_result.push(i + '/' + index);
               index = temp.indexOf(target, index+1);
@@ -687,6 +689,7 @@
             var l = this.search_result[i].split('/');
             if(n != parseInt(l[0])){
               n = parseInt(l[0]);
+              
               offset = 0;
             }
             var t = c[l[0]].innerHTML.slice(0, parseInt(l[1]) + offset) + '<span class=\"highlight_find\" style=\"background-color:#c57a2b\">' + target + '</span>' + c[l[0]].innerHTML.slice(parseInt(l[1])+ target.length + offset);
