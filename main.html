@@ -325,6 +325,10 @@
             savefile();
             e.preventDefault();
           }
+          if (e.ctrlKey && e.which == 70) {
+            show_finder ? finder.remove():finder.show();
+            e.preventDefault();
+          }
         }
         else {
           if (e.which === 38 || e.which === 40) {
@@ -519,6 +523,191 @@
         subtree: true, characterData: false, childList: true, attributes: true
       });
 
+      //find 구현
+      show_finder = false;
+      const finder = {
+        search_result : [],
+        extended : false,
+        show: function() {
+          const view = document.createElement('div');
+          view.id = 'finder-wrapper';
+          view.style.height = '30px';
+          
+          const findtext = document.createElement('input');
+          findtext.id = 'finder-text';
+          findtext.type = 'text';
+          view.appendChild(findtext);
+
+          findtext.addEventListener('keydown', (e) => {
+            if(e.which == 13)
+            {
+              this.search();
+            }
+          });
+
+          const label = document.createElement('div');
+          label.id = 'result_label';
+          view.appendChild(label);
+
+          const replacetext = document.createElement('input');
+          replacetext.id = 'replace-text';
+          replacetext.type = 'text';
+          replacetext.style.display = 'none';
+          view.appendChild(replacetext);
+
+          const previous = document.createElement('div');
+          previous.id = 'finder_previous';
+          previous.style.right = '60px';
+          previous.style.top = '5px';
+          previous.innerText = '↑';
+          previous.classList.add('finder-button');
+          view.appendChild(previous);
+
+          const next = document.createElement('div');
+          next.id = 'finder_next';
+          next.style.right = '40px';
+          next.style.top = '5px';
+          next.innerText = '↓';
+          next.classList.add('finder-button');
+          view.appendChild(next);
+
+          const close = document.createElement('div');
+          close.id = 'finder_close';
+          close.style.right = '5px';
+          close.style.top = '5px';
+          close.innerText = 'X';
+          close.classList.add('finder-button');
+          view.appendChild(close);
+
+          close.addEventListener('click', (e) => {
+            show_finder = false;
+            this.remove();
+          });
+
+          const change = document.createElement('div');
+          change.id = 'finder_change';
+          change.style.right = '140px';
+          change.style.bottom = '5px';
+          change.innerText = '↔';
+          change.classList.add('finder-button');
+          change.style.display = 'none';
+          view.appendChild(change);
+
+          const changeall = document.createElement('div');
+          changeall.id = 'finder_changeall';
+          changeall.style.right = '120px';
+          changeall.style.bottom = '5px';
+          changeall.innerText = '⇔';
+          changeall.classList.add('finder-button');
+          changeall.style.display = 'none';
+          view.appendChild(changeall);
+
+          const toggle = document.createElement('div');
+          toggle.id = 'finder-toggle';
+          toggle.style.lineHeight = '30px';
+          toggle.innerText = '＞';
+          toggle.addEventListener('click', (e) => {
+            if(this.extended)
+            {
+              view.style.height = '30px';
+              toggle.style.lineHeight = '30px';
+              toggle.innerText = '＞';
+              replacetext.style.display = 'none';
+              change.style.display = 'none';
+              changeall.style.display = 'none';
+              this.extended=false;
+            }
+            else
+            {
+              view.style.height = '60px';
+              toggle.style.lineHeight = '60px';
+              toggle.innerText = '∨';
+              replacetext.style.display = 'block';
+              change.style.display = 'block';
+              changeall.style.display = 'block';
+              this.extended=true;
+            }
+          });
+          view.appendChild(toggle);
+
+          show_finder = true;
+          document.body.appendChild(view);
+        },
+        remove: function () {
+          if (document.getElementById('finder-wrapper')) {
+            document.getElementById('finder-wrapper').remove();
+            var nodes = document.getElementsByClassName('highlight_find');
+            for(var i = 0; i < nodes.length;)
+            {
+              var temp = nodes[i].innerText;
+              nodes[i].parentElement.insertBefore(document.createTextNode(temp), nodes[i]);
+              nodes[i].remove();
+            }
+          }
+          show_finder = false;
+        },
+        search: function () {
+          var map = {
+            '<': '&lt',
+            '>': '&gt',
+          };
+
+          this.search_result = [];
+          var nodes = document.getElementsByClassName('highlight_find');
+          for(var i = 0; i < nodes.length;)
+          {
+            var temp = nodes[i].innerText;
+            nodes[i].parentElement.insertBefore(document.createTextNode(temp), nodes[i]);
+            nodes[i].remove();
+          }
+
+          var target = document.getElementById('finder-text').value;
+          var c = el.children;
+          var regex = /(<([^>]+)>)/ig;
+          for (var i = 0; i < c.length; i++) {
+  
+            var temp = c[i].innerHTML.replace(regex, '');
+            var index = temp.indexOf(target,0);
+            if(index >= 0)
+            {
+              c[i].innerHTML = temp;
+              c[i].className = 'editor_node_changed';
+            }
+            while(index >= 0)
+            {
+              this.search_result.push(i + '/' + index);
+              index = temp.indexOf(target, index+1);
+            }
+            
+          }
+          var offset = 0;
+          var n = 0;
+          for(var i = 0; i < this.search_result.length; i++)
+          {
+            var l = this.search_result[i].split('/');
+            if(n != parseInt(l[0])){
+              n = parseInt(l[0]);
+              offset = 0;
+            }
+            var t = c[l[0]].innerHTML.slice(0, parseInt(l[1]) + offset) + '<span class=\"highlight_find\" style=\"background-color:#c57a2b\">' + target + '</span>' + c[l[0]].innerHTML.slice(parseInt(l[1])+ target.length + offset);
+            c[l[0]].innerHTML = t;
+            offset += 69;
+          }
+
+        /*
+          const s = node.innerText
+          .replace(/</g, '&lt').replace(/>/g, '&gt')
+          .replace(/(".*?"|'.*?'|`.*?`)/g, '<strong><em>$1</em></strong>')
+          //.replace(/\b(\d+)/g, '<em><strong>$1</strong></em>')
+          .replace(/(\/\/.*)/g, '<span style=\"color:#6a9955\"><em>$1</em></span>')
+          .replace(
+            /\b(new|in|of|typeof|function|var|const|let|\.length|\.\w+)(?=[^\w])\b/g,
+            '<span style=\"color:#569cd6\">$1</span>');
+          c[i].innerHTML = s.split('\n').join('<br/>');
+          */
+          document.getElementById('result_label').innerText = this.search_result.length;
+        }
+      }
 
       //intellisense 구현
       show_intellisense = false;

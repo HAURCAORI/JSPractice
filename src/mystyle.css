@@ -286,6 +286,77 @@ input[type="file"]
       color: var(--color-text);
       box-shadow: 5px 5px 7px var(--color-dark);
   }
+#finder-wrapper {
+    width : 400px;
+    position: absolute;
+    top : 70px;
+    right : 150px;
+    background-color: var(--color-basic3);
+    box-shadow: 3px 3px 7px black;
+}
+#finder-text {
+    width : 200px;
+    height : 18px;
+    top : 4px;
+    left : 25px;
+    position : absolute;
+    border: 1px solid var(--color-border-dark);
+    background-color: var(--color-basic2);
+    font-size : 12px;
+    color : var(--color-text);
+    -webkit-appearance: none;
+}
+#replace-text {
+    width : 200px;
+    height : 18px;
+    bottom : 4px;
+    left : 25px;
+    position : absolute;
+    border: 1px solid var(--color-border-dark);
+    background-color: var(--color-basic2);
+    font-size : 12px;
+    color : var(--color-text);
+    -webkit-appearance: none;
+}
+#finder-toggle {
+    width : 20px;
+    top : 0;
+    left : 0;
+    font-size : 12px;
+    position : absolute;
+    color : var(--color-text);
+    text-align: center;
+}
+#finder-toggle:hover {
+    background-color: var(--color-basic2);
+}
+.finder-button {
+    width : 20px;
+    line-height : 20px;
+    font-size : 12px;
+    position : absolute;
+    color : var(--color-text);
+    text-align: center;
+}
+.finder-button:hover {
+    background-color: var(--color-basic2);
+}
+
+#result_label {
+    width : 50px;
+    line-height : 20px;
+    left : 240px;
+    top : 4px;
+    position : absolute;
+    font-size : 12px;
+    color : var(--color-text);
+}
+
+input:focus
+{
+    outline: 1px solid var(--color-blue);
+}
+
 ul.list {
     list-style: none;
     margin: 0px;
