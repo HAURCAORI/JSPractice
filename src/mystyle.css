@@ -343,7 +343,7 @@ input[type="file"]
 }
 
 #result_label {
-    width : 50px;
+    width : 80px;
     line-height : 20px;
     left : 240px;
     top : 4px;

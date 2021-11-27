@@ -146,8 +146,18 @@
   <script type="text/javascript" src="js/intellisense.js"></script>
   <script>
 
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.which == 70) {
+        e.preventDefault();
+      }
+    });
+
     // Syntax highlight for JS
     const js = el => {
+      if(show_finder)
+      {
+        return;
+      }
       for (const node of el.children) {
         if(node.className)
         {
@@ -323,7 +333,6 @@
           if (e.which === 32) { edit = false; };
           if (e.ctrlKey && e.which == 83) {
             savefile();
-            e.preventDefault();
           }
           if (e.ctrlKey && e.which == 70) {
             show_finder ? finder.remove():finder.show();
@@ -455,6 +464,21 @@
           }
         }
       }
+      
+      function findUntilEL(node) {
+        if(!node)
+        {
+          return null;
+        }
+        if(node.id == 'editor_line')
+        {
+          return node;
+        }
+        else
+        {
+          return findUntilEL(node.parentElement)
+        }
+      }
 
 
       function savefile() {
@@ -526,9 +550,18 @@
       //find 구현
       show_finder = false;
       const finder = {
+        pos: null,
         search_result : [],
+        search_target : null,
+        origin : null,
+        search_index : 0,
         extended : false,
+        case_sensitive : true,
         show: function() {
+          this.pos = caret()
+          this.search_target = null;
+          this.search_index = 0;
+          this.origin = null;
           const view = document.createElement('div');
           view.id = 'finder-wrapper';
           view.style.height = '30px';
@@ -536,12 +569,25 @@
           const findtext = document.createElement('input');
           findtext.id = 'finder-text';
           findtext.type = 'text';
+          findtext.setAttribute('autocomplete','off');
           view.appendChild(findtext);
 
           findtext.addEventListener('keydown', (e) => {
-            if(e.which == 13)
-            {
+            if(e.shiftKey && e.which == 13) {
+              this.search_previous();
+              e.preventDefault();
+            }
+            else if(e.which == 13) {
               this.search();
+              e.preventDefault();
+            }
+            if (e.ctrlKey && e.which == 70) {
+              this.remove()
+            }
+            if(e.key === "Escape")
+            {
+              this.remove()
+              e.preventDefault;
             }
           });
 
@@ -552,6 +598,7 @@
           const replacetext = document.createElement('input');
           replacetext.id = 'replace-text';
           replacetext.type = 'text';
+          replacetext.setAttribute('autocomplete','off');
           replacetext.style.display = 'none';
           view.appendChild(replacetext);
 
@@ -561,6 +608,9 @@
           previous.style.top = '5px';
           previous.innerText = '↑';
           previous.classList.add('finder-button');
+          previous.addEventListener('click', (e) =>{
+            this.search_previous();
+          });
           view.appendChild(previous);
 
           const next = document.createElement('div');
@@ -569,6 +619,9 @@
           next.style.top = '5px';
           next.innerText = '↓';
           next.classList.add('finder-button');
+          next.addEventListener('click', (e) =>{
+            this.search_next();
+          });
           view.appendChild(next);
 
           const close = document.createElement('div');
@@ -632,6 +685,8 @@
 
           show_finder = true;
           document.body.appendChild(view);
+
+          findtext.focus();
         },
         remove: function () {
           if (document.getElementById('finder-wrapper')) {
@@ -645,8 +700,25 @@
             }
           }
           show_finder = false;
+          //highlight(el);
+          setCaret(this.pos);
+          el.focus();
         },
         search: function () {
+          var target = document.getElementById('finder-text').value;
+          if(target.length <= 0)
+          {
+            return;
+          }
+          if(this.search_target == target && this.search_index > 0)
+          {
+            this.search_next();
+            return;
+          }
+          else{
+            this.search_target = target;
+          }
+          this.search_index = 0;
           var map = {
             '<': '&lt',
             '>': '&gt',
@@ -661,20 +733,26 @@
             nodes[i].remove();
           }
 
-          var target = document.getElementById('finder-text').value;
-          if(target.length <= 0)
+          if(!this.case_sensitive)
           {
-            return;
+            target = target.toLowerCase();
           }
+          
           var c = el.children;
           var regex = /(<([^>]+)>)/ig;
           for (var i = 0; i < c.length; i++) {
   
-            var temp = c[i].innerHTML.replace(regex, '');
+            var o = c[i].innerHTML.replace(regex, '');
+            var temp = o;
+            if(!this.case_sensitive)
+            {
+              temp = temp.toLowerCase();
+            }
             var index = temp.indexOf(target,0);
             if(index >= 0)
             {
-              c[i].innerHTML = temp;
+              this.origin = o.substr(index, target.length);
+              c[i].innerHTML = o;
               c[i].className = 'editor_node_changed';
             }
             while(index >= 0)
@@ -694,23 +772,53 @@
               
               offset = 0;
             }
-            var t = c[l[0]].innerHTML.slice(0, parseInt(l[1]) + offset) + '<span class=\"highlight_find\" style=\"background-color:#c57a2b\">' + target + '</span>' + c[l[0]].innerHTML.slice(parseInt(l[1])+ target.length + offset);
+            var t = c[l[0]].innerHTML.slice(0, parseInt(l[1]) + offset) + '<span class=\"highlight_find\" style=\"background-color:#c57a2b\">' + this.origin + '</span>' + c[l[0]].innerHTML.slice(parseInt(l[1])+ target.length + offset);
             c[l[0]].innerHTML = t;
             offset += 69;
           }
+          if(this.search_result.length > 0)
+          {
+            this.search_index++;
+          }
 
-        /*
-          const s = node.innerText
-          .replace(/</g, '&lt').replace(/>/g, '&gt')
-          .replace(/(".*?"|'.*?'|`.*?`)/g, '<strong><em>$1</em></strong>')
-          //.replace(/\b(\d+)/g, '<em><strong>$1</strong></em>')
-          .replace(/(\/\/.*)/g, '<span style=\"color:#6a9955\"><em>$1</em></span>')
-          .replace(
-            /\b(new|in|of|typeof|function|var|const|let|\.length|\.\w+)(?=[^\w])\b/g,
-            '<span style=\"color:#569cd6\">$1</span>');
-          c[i].innerHTML = s.split('\n').join('<br/>');
-          */
-          document.getElementById('result_label').innerText = this.search_result.length;
+          var f = document.getElementsByClassName('highlight_find')
+          if(f[0])
+          {
+            f[0].style.backgroundColor = '#276396';
+            var y = findUntilEL(f[0]).offsetTop;
+            el.scrollTop = y - 200;
+          }
+          document.getElementById('result_label').innerText = (this.search_index) + ' of ' + this.search_result.length;
+        },
+        search_next : function() {
+          var nodes = document.getElementsByClassName('highlight_find');
+          nodes[this.search_index-1].style.backgroundColor = '#c57a2b';
+          if(this.search_index >= this.search_result.length)
+          {
+            this.search_index = 0;
+          }
+          nodes[this.search_index].style.backgroundColor = '#276396';
+          
+          var y = findUntilEL(nodes[this.search_index]).offsetTop;
+          el.scrollTop = y - 200;
+
+          this.search_index++;
+          document.getElementById('result_label').innerText = (this.search_index) + ' of ' + this.search_result.length;
+        },
+        search_previous : function() {
+          var nodes = document.getElementsByClassName('highlight_find');
+          this.search_index--;
+          nodes[this.search_index].style.backgroundColor = '#c57a2b';
+          if(this.search_index <= 0)
+          {
+            this.search_index = this.search_result.length;
+          }
+          nodes[this.search_index-1].style.backgroundColor = '#276396';
+
+          var y = findUntilEL(nodes[this.search_index-1]).offsetTop;
+          el.scrollTop = y - 200;
+          
+          document.getElementById('result_label').innerText = (this.search_index) + ' of ' + this.search_result.length;
         }
       }
 
