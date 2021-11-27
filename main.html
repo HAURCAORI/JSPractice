@@ -61,7 +61,18 @@
         <div class="explorer-bar"> EXPLORER</div>
         <div class="tree" id="tree_file"> </div>
       </div>
-
+      <div class="dictionary-wrapper">
+          <div class="explorer-bar"> DICTIONARY</div>
+          <div class="list" id="list_dictionary">
+            <div id="selection-wrapper">
+              <select class="selection" id="select-language" style="left : 5px;"></select>
+              <select class="selection" id="select-object"  style="right : 5px;"></select>
+              <input class="finder-text" id="selection-text"  type="text" autocomplete="off" style="bottom: 5px; left: 5px;">
+              <div id="selection-button">Search</div>
+            </div>
+            <div id='selection-list'> </div>
+          </div>
+      </div>
     </div>
 
     <div class="panel-center">
@@ -153,12 +164,16 @@
     });
 
     // Syntax highlight for JS
-    const js = el => {
+    const js = (el, c) => {
       if(show_finder)
       {
         return;
       }
       var script = 'html';
+      if(c.extension)
+      {
+        script = c.extension;
+      }
       var skip = false
       for (const node of el.children) {
         if(node.className)
@@ -366,6 +381,11 @@
             e.preventDefault();
             return;
           }
+          if (e.ctrlKey && e.which == 73) {
+            autoIndent();
+            e.preventDefault();
+            return;
+          }
           if (e.ctrlKey && e.which === 192) {
             intellisense.show();
             e.preventDefault();
@@ -383,10 +403,6 @@
           if (e.which === 32) { edit = false; };
           if (e.ctrlKey && e.which == 83) {
             savefile();
-            e.preventDefault();
-          }
-          if (e.ctrlKey && e.which == 73) {
-            autoIndent();
             e.preventDefault();
           }
         }
@@ -418,7 +434,7 @@
       el.addEventListener('keyup', e => {
         if (e.keyCode == 0x20) {//e.keyCode >= 0x30 || 
           const pos = caret();
-          highlight(el);
+          highlight(el, c);
           setCaret(pos);
         }
         if (show_intellisense) {
@@ -505,7 +521,7 @@
         if (str.slice(-1) == ')') { pos--; }
         range.deleteContents();
         range.insertNode(document.createTextNode(str));
-        highlight(el);
+        highlight(el, c);
         setCaret(pos);
       }
 
@@ -610,6 +626,10 @@
         var ch_offset = 0;
         var cj = 0;
         var script = 'html';
+        if(c.extension)
+        {
+          script = c.extension;
+        } 
         for (const node of el.children) {
           var t = '';
           if (!node.innerText.trimStart()) {
@@ -1339,7 +1359,7 @@
         //Common
         file_name: '', //파일 이름
         path: '',  //프로젝트 상 파일 경로
-        language: '',  //언어
+        extension: '',  //언어
         data: '', //데이터
         edited: false,
         //editor 관련 속성
@@ -1772,6 +1792,9 @@
         {
           ct = FileContext();
           ct.file_name = file;
+          var e = ct.file_name.split('.');
+          var e = ct.file_name.split('.');
+          e.length > 1 ? ct.extension = e[1] : ct.extension = null;
           ct.path = this.getPath(li);
         }
         this.list_context.push(ct);
@@ -1861,6 +1884,9 @@
           con.file_name = target.innerText;
           const regex = new RegExp('\\\\' + this.rename_temp + '\$', 'gi');
           con.path = con.path.replace(regex, '\\' + target.innerText);
+          var e = con.file_name.split('.');
+          e.length > 1 ? con.extension = e[1] : con.extension = null;
+
           tabs_code.rename();
         }
 
@@ -1946,6 +1972,140 @@
       document.getElementById("contextMenu").style.display = "none"
     });
 
+  </script>
+  <script>
+    /*
+     <select class="selection" id="select-language" style="left : 5px;"></select>
+     <select class="selection" id="select-object"  style="right : 5px;"></select>
+     <input class="finder-text" id="selection-text"  type="text" autocomplete="off" style="bottom: 5px; left: 5px;">
+     <div id="selection-button">Search</div>
+      */
+    class List {
+      element;
+      el_language;
+      el_object;
+      el_text;
+      el_list;
+      list = [];
+      language = ['javascript', 'html', 'css'];
+      constructor(id) {
+        this.element = document.getElementById(id);
+        this.el_language = document.getElementById('select-language');
+        this.el_object = document.getElementById('select-object');
+        this.el_text = document.getElementById('selection-text');
+        this.el_list = document.getElementById('selection-list');
+        for(var l of this.language)
+        {
+          var d = document.createElement('option');
+          d.innerText = l;
+          this.el_language.appendChild(d);
+        }
+        this.source = _javascript;
+        this.updateObject();
+
+        this.el_language.addEventListener('change', (e) => {
+          switch(this.el_language.selectedIndex)
+          {
+            case 0 :
+              this.source = _javascript;
+            break;
+            default:
+              this.source = null;
+            break;
+          }
+          this.updateObject();
+        });
+
+        this.el_object.addEventListener('change', (e) => {
+          this.list = [];
+          var i = this.el_object.selectedIndex;
+          if(i === 0)
+          {
+            for(var i = 0; i < this.source.object.length; i++)
+            {
+              const methods = this.source[this.source.object[i]].methods;
+              for (var j = 0; j < methods.length; j++) {
+                this.list.push(methods[j]);
+              }
+              const properties = this.source[this.source.object[i]].properties;
+              for (var j = 0; j < properties.length; j++) {
+                this.list.push(properties[j]);
+              }
+            }
+          }
+          else
+          {
+            const methods = this.source[this.source.object[i-1]].methods;
+            for (var j = 0; j < methods.length; j++) {
+              this.list.push(methods[j]);
+            }
+            const properties = this.source[this.source.object[i-1]].properties;
+            for (var j = 0; j < properties.length; j++) {
+              this.list.push(properties[j]);
+            }
+          }
+          this.updateList();
+        });
+      }
+
+      updateObject() {
+        this.list = [];
+        if(this.source)
+        {
+          var d = document.createElement('option');
+          d.innerText = 'All'
+          this.el_object.appendChild(d);
+          for(var i = 0; i < this.source.object.length; i++)
+          {
+            var d = document.createElement('option');
+            d.innerText = this.source.object[i];
+            this.el_object.appendChild(d);
+
+            const methods = this.source[this.source.object[i]].methods;
+            for (var j = 0; j < methods.length; j++) {
+              this.list.push(methods[j]);
+            }
+            const properties = this.source[this.source.object[i]].properties;
+            for (var j = 0; j < properties.length; j++) {
+              this.list.push(properties[j]);
+            }
+          }
+          this.updateList();
+        }
+        else
+        {
+          while(this.el_object.hasChildNodes())
+          {
+            this.el_object.removeChild(this.el_object.firstChild);
+          }
+          while(this.el_list.hasChildNodes())
+          { 
+            this.el_list.removeChild(this.el_list.firstChild);
+          }
+        }
+      }
+      
+      updateList(){
+        while(this.el_list.hasChildNodes())
+        {
+          this.el_list.removeChild(this.el_list.firstChild);
+        }
+        this.list.sort(function(a, b)  {
+          if(a.toLowerCase() > b.toLowerCase()) return 1;
+          if(a.toLowerCase() === b.toLowerCase()) return 0;
+          if(a.toLowerCase() < b.toLowerCase()) return -1;
+        });
+
+        for(var l of this.list)
+        {
+          var d = document.createElement('div');
+          d.classList.add('code_list');
+          d.innerText = l;
+          this.el_list.appendChild(d);
+        }
+      }
+    }
+    const list_dic = new List('list_dictionary');
   </script>
   <script>
     const menu_assign = () => {
