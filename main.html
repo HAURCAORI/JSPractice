@@ -107,7 +107,7 @@
         Intellisense
       </li>
       <div class='list_divide'></div>
-      <li id="edit-find">Find</li>
+      <li id="edit-indent">Auto Indent</li>
     </ul>
   </div>
   <div id="menu-view-contents" class="menu_bar_box" style="display:none">
@@ -158,6 +158,8 @@
       {
         return;
       }
+      var script = 'html';
+      var skip = false
       for (const node of el.children) {
         if(node.className)
         {
@@ -166,30 +168,73 @@
             '<': '&lt',
             '>': '&gt',
           };
-        
-          const s = node.innerText
-          .replace(/</g, '&lt').replace(/>/g, '&gt')
-          .replace(/(".*?"|'.*?'|`.*?`)/g, '<strong><em>$1</em></strong>')
-          //.replace(/\b(\d+)/g, '<em><strong>$1</strong></em>')
-          .replace(/(\/\/.*)/g, '<span style=\"color:#6a9955\"><em>$1</em></span>')
-          .replace(
-            /\b(new|in|of|typeof|function|var|const|let|\.length|\.\w+)(?=[^\w])\b/g,
-            '<span style=\"color:#569cd6\">$1</span>')
-          .replace(
-            /\b(if|else|do|while|switch|for|continue|break|return)\b/g,
-            '<span style=\"color:#c586c0\">$1</span>');
-            /*
-          .replace(
-            /&lt\/?(html|head|body|title|div|ul|li|script|span).*&gt/gi,
-            '<span style=\"color:#569cd6\">$&</span>'
-          )
-          */
-          node.innerHTML = s.split('\n').join('<br/>');
+          if (script == 'js') {
+            if(node.innerText.match(/\<\/script\>/))
+            {
+              script = 'html';
+            }
+
+            const s = node.innerText
+              .replace(/</g, '&lt').replace(/>/g, '&gt')
+              .replace(/(".*?"|'.*?'|`.*?`)/g, '<strong><em>$1</em></strong>')
+              //.replace(/\b(\d+)/g, '<em><strong>$1</strong></em>')
+              .replace(/(\/\/.*)/g, '<span style=\"color:#6a9955\"><em>$1</em></span>')
+              .replace(
+                /\b(new|in|of|typeof|function|var|const|let|\.length|\.\w+)(?=[^\w])\b/g,
+                '<span style=\"color:#569cd6\">$1</span>')
+              .replace(
+                /\b(if|else|do|while|switch|for|continue|break|return)\b/g,
+                '<span style=\"color:#c586c0\">$1</span>');
+            node.innerHTML = s.split('\n').join('<br/>');
+          }
+          if (script == 'html') {
+            if(node.innerText.match(/<script>/))
+            {
+              script = 'js';
+            }
+            
+            if(node.innerText.match(/-->/g))
+            {
+              skip = false;
+            }
+            
+            if(skip)
+            {
+              var s = node.innerText
+              .replace(/</g, '&lt').replace(/>/g, '&gt');
+              s = '<span style=\"color:#6a9955\"><em>' + s + '</em></span>';
+              node.innerHTML = s.split('\n').join('<br/>');
+            }
+            else
+            {
+              const s = node.innerText
+              .replace(/</g, '&lt').replace(/>/g, '&gt')
+              .replace(/(".*?"|'.*?'|`.*?`)/g, '<span style=\"color:#ffffff\"><strong><em>$&</em></strong></span>')
+              .replace(
+                /\b(class|type|id|href|rel|charset)=/g,
+                '<span style=\"color:#89eeef\">$&</span>')
+              .replace(
+                /&lt\/?(html|head|body|title|div|ul|li|script|span|u|input|label|meta).*[^(&gt)]*&gt/gi,
+                '<span style=\"color:#569cd6\">$&</span>')
+              .replace(/&lt\!--/g,'<span style=\"color:#6a9955\"><em>$&</em></span>')
+              .replace(/--&gt/g,'<span style=\"color:#6a9955\"><em>$&</em></span>')
+              .replace(
+              /(&lt\/|&lt|&gt)/g,
+              '<span style=\"color:#aaaaaa\">$1</span>');
+              node.innerHTML = s.split('\n').join('<br/>');
+            }
+            if(node.innerText.match(/<\!--/g))
+            {
+              skip = true;
+            }
+            
+            
+          }
         }
       }
     };
 
-    const editor = (el, c, highlight = js, tab = '    ') => {
+    const editor = (el, c, highlight = js, tab = '  ') => {
       //caret 위치 관련
       const caret = () => {
         const range = window.getSelection().getRangeAt(0);
@@ -316,6 +361,11 @@
             }
             e.preventDefault();
           }
+          if (e.ctrlKey && e.which == 70) {
+            show_finder ? finder.remove():finder.show();
+            e.preventDefault();
+            return;
+          }
           if (e.ctrlKey && e.which === 192) {
             intellisense.show();
             e.preventDefault();
@@ -333,9 +383,10 @@
           if (e.which === 32) { edit = false; };
           if (e.ctrlKey && e.which == 83) {
             savefile();
+            e.preventDefault();
           }
-          if (e.ctrlKey && e.which == 70) {
-            show_finder ? finder.remove():finder.show();
+          if (e.ctrlKey && e.which == 73) {
+            autoIndent();
             e.preventDefault();
           }
         }
@@ -380,6 +431,17 @@
 
       });
 
+      document.getElementById('tabs_code').addEventListener('click', (e) => {
+        if(show_intellisense)
+        {
+          intellisense.remove();
+        }
+        if(show_finder)
+        {
+          finder.remove();
+        }
+      });
+
 
       //함수 모음
       function getLine() {
@@ -413,7 +475,7 @@
         c.current_indent = 0;
         c.current_indent += (str.match(/\{/g) || []).length;
         c.current_indent -= (str.match(/\}/g) || []).length;
-        c.current_div_indent = count / 4;
+        c.current_div_indent = count / 2;
       }
       function insertTab() {
         const pos = caret() + tab.length;
@@ -427,7 +489,7 @@
         const prefix = range.cloneRange();
         prefix.selectNodeContents(c.current_div);
         prefix.setStart(range.endContainer,0);
-        prefix.setEnd(range.endContainer, 4);
+        prefix.setEnd(range.endContainer, 2);
         prefix.deleteContents(); 
       }
       function insertIntelli() {
@@ -488,8 +550,11 @@
             .replace(/\<\/?br\>/g, '')
             .replace(/\<\/?strong\>/g, '')
             .replace(/\<\/?em\>/g, '')
+            .replace(/<\/span>/g, '')
+            .replace(/<span style=*[^>]*>/g, '')
             .replace(/&lt;/g, '<')
-            .replace(/&gt;/g, '>');
+            .replace(/&gt;/g, '>')
+            .replace(/&amp;/g, '&');
           text += '\n';
         }
 
@@ -512,8 +577,8 @@
         if (c.tab_id == c.current_tab) {
           savefile();
         }
-
       });
+
 
       el.addEventListener('trigger', (event) => {
         save();
@@ -526,12 +591,78 @@
             .replace(/\<\/?br\>/g, '')
             .replace(/\<\/?strong\>/g, '')
             .replace(/\<\/?em\>/g, '')
+            .replace(/<\/span>/g, '')
+            .replace(/<span style=*[^>]*>/g, '')
             .replace(/&lt;/g, '<')
-            .replace(/&gt;/g, '>');
+            .replace(/&gt;/g, '>')
+            .replace(/&amp;/g, '&');
           text += '\n';
         }
         c.data = text;
         c.edited = false;
+      }
+
+      function autoIndent() {
+        var line = 1;
+        var ch = 0;
+        var ch_temp = 0;
+        var ch_once = 0;
+        var ch_offset = 0;
+        var cj = 0;
+        var script = 'html';
+        for (const node of el.children) {
+          var t = '';
+          if (!node.innerText.trimStart()) {
+            line++;
+            continue;
+          }
+          if (script == 'html')
+          {
+            if(node.innerText.match(/<script>/))
+            {
+              script = 'js';
+            }
+
+            ch_temp = (node.innerText.match(/<[a-z][^>]*>/ig) || []).length;
+            ch_once = (node.innerText.match(/<[a-z][^>]*\/>/ig) || []).length;
+
+            if(ch_temp == (node.innerText.match(/<\/[a-z][^>]*>/ig) || []).length)
+            {
+              ch_offset = ch_temp;
+            } else {
+              ch_offset = 0;
+            }
+            ch -= (node.innerText.match(/<\/[a-z][^>]*>/ig) || []).length + ch_once;
+            
+            for (var i = 0; i < ch + ch_offset+ch_once; i++) { t += tab; }
+            node.innerText = t + node.innerText.trimStart();
+            if(node.innerText.match(/<meta [a-z][^>]*>/ig) || node.innerText.match(/<link [a-z][^>]*>/ig))
+            {
+              line++;
+              continue;
+            }
+            
+            ch += (node.innerText.match(/<[a-z][^>]*>/ig) || []).length;
+            
+          }
+          if (script == 'js') {
+            if(node.innerText.match(/\<\/script\>/))
+            {
+              script = 'html';
+              ch--;
+              for (var i = 0; i < ch; i++) { t += tab; }
+              node.innerText = t + node.innerText.trimStart();
+            }
+
+            cj -= (node.innerText.match(/\}/g) || []).length;
+            for (var i = 0; i < cj; i++) { t += tab; }
+            node.innerText = t + node.innerText.trimStart();
+            cj += (node.innerText.match(/\{/g) || []).length;
+          }
+          node.className = 'editor_node_changed';
+          line++;
+        }
+        //  highlight(el);
       }
 
       //변경 이벤트
@@ -637,7 +768,6 @@
           view.appendChild(close);
 
           close.addEventListener('click', (e) => {
-            show_finder = false;
             this.remove();
           });
 
