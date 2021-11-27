@@ -662,6 +662,10 @@
           }
 
           var target = document.getElementById('finder-text').value;
+          if(target.length <= 0)
+          {
+            return;
+          }
           var c = el.children;
           var regex = /(<([^>]+)>)/ig;
           for (var i = 0; i < c.length; i++) {
@@ -673,9 +677,7 @@
               c[i].innerHTML = temp;
               c[i].className = 'editor_node_changed';
             }
-            while(index >= 0)haurcaori
-            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
-
+            while(index >= 0)
             {
               this.search_result.push(i + '/' + index);
               index = temp.indexOf(target, index+1);
