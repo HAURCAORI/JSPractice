@@ -240,6 +240,7 @@ input[type="file"]
     font-size: 14px;
     height: calc(100% - 7px);
     outline: none;
+    overflow-x: auto;
     overflow-y: auto;
     margin: 2px 0px 0px 0px;
     padding: 5px 0px 0px 48px;
@@ -247,14 +248,16 @@ input[type="file"]
     background-color: var(--color-basic3);
     color: var(--color-text);
     box-shadow: 0px 2px 5px var(--color-dark) inset;
-  }
-  
-  .editor div {
+}
+.word_wrap {
+    white-space: nowrap;
+}
+
+.editor div {
     display: block;
     position: relative;
-    white-space: pre-wrap;
     cursor: text;
-  }
+}
   
   .editor div::before {
     content: counter(line);
@@ -266,6 +269,7 @@ input[type="file"]
   
   .editor::-webkit-scrollbar {
     width: 10px;
+    height: 10px;
   }
   .editor::-webkit-scrollbar-thumb {
     background-color: var(--color-light);
@@ -287,6 +291,14 @@ input[type="file"]
       color: var(--color-text);
       box-shadow: 5px 5px 7px var(--color-dark);
   }
+.intellisense_list {
+    width : 130px;
+    line-height: 16px;
+    position : absolute;
+    display : inline-block;
+    padding : 0 5px 0 25px;
+    margin : 0;
+}
 #finder-wrapper {
     width : 400px;
     position: absolute;
@@ -352,8 +364,8 @@ ul.list {
     padding: 0px;
 }
   ul.list li{
-    height: 15px;
-    padding: 2px 0px 2px 10px;
+    line-height: 16px;
+    padding: 0px 0px 0px 10px;
     font-size: 10px;
     cursor: pointer;
 }
@@ -519,7 +531,7 @@ select:focus
     color : var(--color-text);  
 }
 .code_list_content {
-    width : 100px;
+    width : 130px;
     line-height: 25px;
     position : absolute;
     display : inline-block;
