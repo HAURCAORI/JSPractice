@@ -21,6 +21,9 @@
         <li id="menu-view">
           <u>V</u>iew
         </li>
+        <li id="menu-help">
+          <u>H</u>elp
+        </li>
       </ul>
     </div>
 
@@ -48,6 +51,9 @@
       </div>
       <div class="bar-button" id='bt_highlight'>
         HIGH
+      </div>
+      <div class="bar-button" id='bt_find'>
+        FIND
       </div>
       <div class="bar-button" id='bt_html'>
         HTML
@@ -96,14 +102,14 @@
       <div class='list_divide'></div>
       <li id="file-openfile">
         <input type="file" id="open_file" class="inputfile" />
-        <label for="open_file">Open File</label>
+        <label for="open_file">Open File<div class='menu-shortcut'>ctrl + O</div></label>
       </li>
       <li id="file-openfolder">
         <input id="open_directory" type="file" webkitdirectory directory />
         <label for="open_directory">Open Folder</label>
       </li>
       <div class='list_divide'></div>
-      <li id="file-save">Save</li>
+      <li id="file-save">Save<div class='menu-shortcut'>ctrl + S</div></li>
       <li id="file-saveall">Save All</li>
       <div class='list_divide'></div>
       <li id="file-exit">Exit</li>
@@ -116,7 +122,19 @@
         Intellisense
       </li>
       <div class='list_divide'></div>
-      <li id="edit-indent">Auto Indent</li>
+      <li id="edit-autoindent" class="checked">
+          <div class="menu_checkbox">✓</div>
+          Auto Indent
+      </li>
+      <li id="edit-indent">
+        Indent Apply
+        <div class='menu-shortcut'>ctrl + I</div>
+      </li>
+      <div class='list_divide'></div>
+      <li id="edit-find">
+        Find
+        <div class='menu-shortcut'>ctrl + F</div>
+      </li>
     </ul>
   </div>
   <div id="menu-view-contents" class="menu_bar_box" style="display:none">
@@ -130,10 +148,15 @@
         <div class="menu_extend">＞</div>
       </li>
       <div class='list_divide'></div>
+      <li id="view-color">
+          Color Wheel
+      </li>
+      <div class='list_divide'></div>
       <li id="view-wordwrap" class="checked">
         <div class="menu_checkbox">✓</div>
         Word Wrap
       </li>
+      
     </ul>
   </div>
   <div id="view-option-contents" class="menu_bar_box" style="display:none">
@@ -146,18 +169,28 @@
       </li>
     </ul>
   </div>
-  <script>
-    const bt_html = document.getElementById('bt_html');
-    bt_html.addEventListener('click', (event) => {
-      window.open("/test.html", '_blank');
-    });
-  </script>
-
+  <div id="menu-help-contents" class="menu_bar_box" style="display:none">
+      <ul class="menu_bar_list">
+        <li id="help-welcome">
+          Welcome
+        </li>
+        <li id="help-features">
+          Features
+        </li>
+        <div class='list_divide'></div>
+        <li id="help-about">
+          About
+        </li>
+      </ul>
+    </div>
   <script type="text/javascript" src="js/intellisense.js"></script>
   <script>
 
     document.addEventListener('keydown', (e) => {
-      if (e.ctrlKey && e.which == 70) {
+      if (e.ctrlKey && e.which == 70) { //ctrl + f
+        e.preventDefault();
+      }
+      if (e.ctrlKey && e.which == 83) { //ctrl + s
         e.preventDefault();
       }
     });
@@ -172,6 +205,7 @@
         script = c.extension;
       }
       var skip = false
+
       for (const node of el.children) {
         if (node.className) {
           node.classList.remove('editor_node_changed');
@@ -233,11 +267,29 @@
               skip = true;
             }
           }
+          if(script == 'css')
+          {
+            const s = node.innerText
+              .replace(/</g, '&lt').replace(/>/g, '&gt')
+              .replace(/\#/g, '&hash')
+              .replace(/\:/g, '&col')
+              .replace(/\s[a-z].*[^(&col)]&col/g, '<span style=\"color:#9cdcfe\">$&</span>')
+              .replace(/\.[a-z].*[^\s][^{]/gi, '<span style=\"color:#d7ba7d\">$&</span>')
+              .replace(/&hash[a-z].*[^\s][^{]/gi, '<span style=\"color:#d7ba7d\">$&</span>')
+              .replace(/(div|li|body|select|input|ul|li).*[^{]*{/gi, '<span style=\"color:#d7ba7d\">$&</span>')
+              .replace(/&hash([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8});/gi,'<span style=\"color:#ce9178\">$&</span>')
+              .replace(/&col/g, ':')
+              .replace(/&hash/g, '#');
+              
+            node.innerHTML = s.split('\n').join('<br/>');
+          }
         }
       }
     };
 
     const editor = (el, c, highlight = js, tab = '  ') => {
+      var auto_tab = true;
+      
       //caret 위치 관련
       const caret = () => {
         const range = window.getSelection().getRangeAt(0);
@@ -345,6 +397,8 @@
           if (e.shiftKey && e.which === 221) {//}
             c.current_indent--;
 
+            if(auto_tab)
+            {
             const range = window.getSelection().getRangeAt(0);
             const prefix = range.cloneRange();
             prefix.selectNodeContents(el);
@@ -356,15 +410,19 @@
             if (c.current_div_indent >= global_indent) {
               removeTab();
             }
+            }
           }
           if (e.which === 13) {//enter
             addLine();
+            if(auto_tab)
+            {
             for (var i = 0; i < Math.floor(c.current_div_indent) + c.current_indent; i++) {
               insertTab();
             }
+            }
             e.preventDefault();
           }
-          if (e.ctrlKey && e.which == 70) {
+          if (e.ctrlKey && e.which == 70) { //검색
             show_finder ? finder.remove() : finder.show();
             e.preventDefault();
             return;
@@ -374,7 +432,7 @@
             e.preventDefault();
             return;
           }
-          if (e.ctrlKey && e.which === 192) {
+          if (e.ctrlKey && e.which === 192) { //Intellisense
             intellisense.show();
             e.preventDefault();
           }
@@ -389,7 +447,7 @@
             intellisense.filter();
           }
           if (e.which === 32) { edit = false; };
-          if (e.ctrlKey && e.which == 83) {
+          if (e.ctrlKey && e.which == 83) { //saveFile
             savefile();
             e.preventDefault();
           }
@@ -433,7 +491,27 @@
           correctNode();
           correct = false;
         }
-
+        if (!show_intellisense) {
+          if (e.which === 190 && c.extension == 'html' && auto_tab)
+          {
+            const range = window.getSelection().getRangeAt(0);
+            const prefix = range.cloneRange();
+            prefix.selectNodeContents(el);
+            prefix.setEnd(range.endContainer, range.endOffset);
+            const str = prefix.toString();
+            var global_indent = 0;
+            global_indent += (str.match(/<[a-z][^>]*>/ig) || []).length;
+            global_indent -= (str.match(/<\/[a-z][^>]*>/ig) || []).length;
+            global_indent -= (str.match(/<[a-z][^>]*\/>/ig) || []).length;//한줄
+            //console.log('global : ' + global_indent + ' / ' + c.current_div_indent);
+            var temp = 0;
+            temp += (c.current_div.innerText.match(/<[a-z][^>]*>/ig) || []).length;
+            temp -= (c.current_div.innerText.match(/<\/[a-z][^>]*>/ig) || []).length;
+            if(temp < 0 && c.current_div_indent > global_indent){
+              removeTab();
+            }
+          }
+        }
       });
 
       document.getElementById('tabs_code').addEventListener('click', (e) => {
@@ -474,11 +552,19 @@
           }
           count++;
         }
-
+        if(auto_tab)
+        {
         c.current_indent = 0;
         c.current_indent += (str.match(/\{/g) || []).length;
         c.current_indent -= (str.match(/\}/g) || []).length;
+        if(c.extension == 'html')
+        {
+          c.current_indent += (str.match(/<[a-z][^>]*>/ig) || []).length;
+          c.current_indent -= (str.match(/<\/[a-z][^>]*>/ig) || []).length;
+          c.current_indent -= (str.match(/<[a-z][^>]*\/>/ig) || []).length;//한줄
+        }
         c.current_div_indent = count / 2;
+        }
       }
       function insertTab() {
         const pos = caret() + tab.length;
@@ -589,6 +675,34 @@
           autoIndent();
         }
       });
+
+      document.getElementById('edit-find').addEventListener('click', (e) => {
+        if (c.tab_id == c.current_tab) {
+          el.focus();
+          show_finder ? finder.remove() : finder.show();
+        }
+      });
+      document.getElementById('bt_find').addEventListener('click', (e) => {
+        if (c.tab_id == c.current_tab) {
+          el.focus();
+          show_finder ? finder.remove() : finder.show();
+        }
+      });
+
+      document.getElementById('bt_html').addEventListener('click', (event) => {
+        if (c.tab_id == c.current_tab) {
+          if(c.extension != 'html')
+          {
+            alert('please select HTML file.');
+            return;
+          }
+          save();
+          var data = new Blob([c.data], { type: 'text/html' });
+          const objectURL = window.URL.createObjectURL(data)
+          window.open(objectURL, '_blank');
+        }
+      });
+
       el.classList.add('word_wrap');
       MutationObserver = window.MutationObserver || window.WebKitMutationObserver;
       var wordwrap_changed = new MutationObserver(function (mutations, observer) {
@@ -603,7 +717,21 @@
           el.classList.add('word_wrap_none');
         }
       });
+      
       wordwrap_changed.observe(document.getElementById('view-wordwrap'), {
+        subtree: true, characterData: false, childList: true, attributes: true
+      });
+
+      var autoTab_changed = new MutationObserver(function (mutations, observer) {
+        if(document.getElementById('edit-autoindent').className == "checked")
+        {
+          auto_tab = true;
+        }else{
+          auto_tab = false;
+        }
+      });
+      
+      autoTab_changed.observe(document.getElementById('edit-autoindent'), {
         subtree: true, characterData: false, childList: true, attributes: true
       });
 
@@ -1388,11 +1516,12 @@
         edited: false,
         //editor 관련 속성
         current_line: 0,
-        current_indent: 0,
         tab_id: 0,
         current_tab: 0,
         current_div: null,
+        current_indent: 0,
         current_div_indent: 0,
+        current_div_indent_tag: 0
       };
       return context;
     }
@@ -2183,7 +2312,7 @@
       el.addEventListener('mouseleave', (e) => {
         isclicked = false;
       });
-      const menu_list = ['menu-file', 'menu-edit', 'menu-view'];
+      const menu_list = ['menu-file', 'menu-edit', 'menu-view', 'menu-help'];
       for (var m of menu_list) {
         append(m)
       }
@@ -2265,6 +2394,12 @@
     };
     menu_assign();
 
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.which == 79) {
+        document.getElementById('open_file').click();
+        e.preventDefault();
+      }
+    });
     document.getElementById('open_file').onchange = function (event) {
       var file = event.target.files[0];
       if (!file) {
@@ -2276,6 +2411,10 @@
         fileData = e.target.result;
         const ct = FileContext();
         ct.file_name = file.name;
+        var e = ct.file_name.split('.');
+        var e = ct.file_name.split('.');
+        e.length > 1 ? ct.extension = e[1] : ct.extension = null;
+
         ct.data = fileData;
         ct.path = '\\' + file.name;
         tabs_code.addTab(ct);
@@ -2309,7 +2448,7 @@
       }
       tree_file.sort();
     });
-    document.getElementById('edit-intelli').addEventListener('click', (e) => {
+    function checkbox(e) {
       if(e.target.className == 'checked')
       {
         e.target.className = 'unchecked';
@@ -2319,30 +2458,22 @@
         e.target.className = 'checked';
         e.target.querySelector('.menu_checkbox').innerText = '✓';
       }
+    }
+    document.getElementById('edit-intelli').addEventListener('click', (e) => {
+      checkbox(e)
+    });
+    document.getElementById('edit-autoindent').addEventListener('click', (e) => {
+      checkbox(e)
     });
     document.getElementById('view-highlight').addEventListener('click', (e) => {
-      if(e.target.className == 'checked')
-      {
-        e.target.className = 'unchecked';
-        e.target.querySelector('.menu_checkbox').innerText = '';
-      }
-      else if(e.target.className == 'unchecked'){
-        e.target.className = 'checked';
-        e.target.querySelector('.menu_checkbox').innerText = '✓';
-      }
+      checkbox(e)
     });
     document.getElementById('view-wordwrap').addEventListener('click', (e) => {
-        if(e.target.className == 'checked')
-        {
-          e.target.className = 'unchecked';
-          e.target.querySelector('.menu_checkbox').innerText = '';
-        }
-        else if(e.target.className == 'unchecked'){
-          e.target.className = 'checked';
-          e.target.querySelector('.menu_checkbox').innerText = '✓';
-        }
+      checkbox(e)
     });
+    
 
+    
   </script>
 </body>
 

@@ -73,6 +73,7 @@ body{
     line-height: 20px;
     padding-left: 20px;
     cursor: default;
+    position: relative; 
 }
 .menu_bar_box li:hover {
     background-color: var(--color-selected-blue);
@@ -93,6 +94,14 @@ body{
     position: absolute;
     margin-right : 10px;
     display: inline-block;
+}
+.menu-shortcut {
+    width: 45px;
+    line-height : 20px;
+    position: absolute;
+    right: 30px;
+    top : 0px;
+    color : var(--color-light);
 }
 
 #workspace{
