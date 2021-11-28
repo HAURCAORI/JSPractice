@@ -2,7 +2,7 @@ const _javascript = {
     //표준 개체 : Number, Math, Date, String, Array
     //기본 타입 : number, string, boolean, symbol, undefined
     object : 
-    ['array','boolean','date','math','number','string','window','history','location','document','element','node','event'],
+    ['array','boolean','date','math','number','string','window','history','location','document','element','node','events'],
     keywords :
     [
         'abstract','arguments','await','boolean','break','byte','case','catch','char','class','const','continue','debugger','default','delete','do',
@@ -116,10 +116,56 @@ const _javascript = {
             'childNodes','firstChild','lastChild','nextSibling','nodeName','nodeType','nodeValue','parentNode','parentElement','textContent'
         ]
     },
-    event : {
-        methods : [
+    events : {
+        events : [
             'addEventListener()','removeEventListener()','dispatchEvent()'
-        ],
-        properties : []
+        ]
     }
 };
+const _html = {
+    object : 
+    ['Tags', 'Attributes','Events','Canvas'],
+    Tags : {
+        tags : [
+            '<!DOCTYPE>','<a>','<abbr>','<address>','<area>','<article>','<aside>','<audio>','<b>','<base>','<bdi>','<bdo>',
+            '<blockquote>','<body>','<br>','<button>','<canvas>','<caption>','<cite>','<code>','<col>','<colgroup>','<data>',
+            '<datalist>','<dd>','<del>','<details>','<dfn>','<dialog>','<div>','<dl>','<dt>','<em>','<embed>','<fieldset>','<figcaption>',
+            '<figure>','<footer>','<form>','<h1>','<h2>','<h3>','<h4>','<h5>','<h6>','<head>','<header>','<hr>','<html>','<i>','<iframe>',
+            '<img>','<input>','<ins>','<kbd>','<label>','<legend>','<li>','<link>','<main>','<map>','<mark>','<meta>','<meter>','<nav>',
+            '<noscript>','<object>','<ol>','<optgroup>','<option>','<output>','<p>','<param>','<picture>','<pre>','<progress>',
+            '<q>','<rp>','<rt>','<ruby>','<s>','<samp>','<script>','<section>','<small>','<source>','<span>','<strong>','<style>','<sub>',
+            '<summary>','<sup>','<svg>','<table>','<tbody>','<td>','<template>','<textarea>','<tfoot>','<th>','<thread>','<time>','<title>',
+            '<tr>','<track>','<u>','<ul>','<var>','<video>','<wbr>'
+        ]
+    },
+    Attributes : {
+        properties : [
+            'accesskey','class','countenteditable','dir','draggable','hidden','id','lang','spellcheck','style','tabindex','title','translate'
+        ]
+    },
+    Events : {
+        events : [
+            'onafterprint','onbeforeprint','onbeforeunload','onerror','onhashchange','onload','onmessage','onoffline','ononline','onpagehide','onpageshow',
+            'onpopstate','onresize','onstorage','onunload','onblur','onchange','oncontextmenu','onfocus','oninput','oninvalid','onrest','onsearch','onselect','onsubmit',
+            'onkeydown','onkeypress','onkeyup',
+            'onclick','ondblclick','onmousedown','onmousemove','onmouseout','onmouseover','onmouseup','onmousewheel','onwheel',
+            'ondrag','ondragend','ondragenter','ondragleave','ondragover','ondragstart','ondrop','onscroll',
+            'oncopy','oncut','onpaste',
+            'ontoggle'
+        ]
+    },
+    Canvas : {
+        methods : [
+            'createLinearGradient()','createPattern()','createRadialGradient()','addColorStop()','rect()','fillRect()','strokeRect()','clearRect()',
+            'fill()','stroke()','beginPath()','moveTo()','closePath()','lineTo()','clip()','quadraticCurveTo()','bezierCurveTo()','arc()','arcTo()','isPointInPath()',
+            'scale()','rotate()','translate()','transform()','setTransform()',
+            'fillText()','strokeText()','measureText()',
+            'drawImage()','createImageData()','getImageData()','putImageData()',
+            'save()','restore()','createEvent()','getContext()','toDataURL()'
+        ],
+        properties : [
+            'fillStyle','strokeStyle','shadowColor','shadowBlur','shadowOffsetX','shadowOffsetY',
+            'lineCap','lineJoin','lineWidth','miterLimit','font','textAlign','textBaseline','width','height','data','globalAlpha','globalCompositeOperation'
+        ]
+    }
+}

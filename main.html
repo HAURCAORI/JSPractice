@@ -68,7 +68,7 @@
               <select class="selection" id="select-language" style="left : 5px;"></select>
               <select class="selection" id="select-object"  style="right : 5px;"></select>
               <input class="finder-text" id="selection-text"  type="text" autocomplete="off" style="bottom: 5px; left: 5px;">
-              <div id="selection-button">Search</div>
+              <div id="selection-button">Clear</div>
             </div>
             <div id='selection-list'> </div>
           </div>
@@ -2009,6 +2009,9 @@
             case 0 :
               this.source = _javascript;
             break;
+            case 1 :
+              this.source = _html;
+            break;
             default:
               this.source = null;
             break;
@@ -2023,33 +2026,78 @@
           {
             for(var i = 0; i < this.source.object.length; i++)
             {
-              const methods = this.source[this.source.object[i]].methods;
-              for (var j = 0; j < methods.length; j++) {
-                this.list.push(methods[j]);
-              }
-              const properties = this.source[this.source.object[i]].properties;
-              for (var j = 0; j < properties.length; j++) {
-                this.list.push(properties[j]);
-              }
+              this.addList(i);
             }
           }
           else
           {
-            const methods = this.source[this.source.object[i-1]].methods;
-            for (var j = 0; j < methods.length; j++) {
-              this.list.push(methods[j]);
-            }
-            const properties = this.source[this.source.object[i-1]].properties;
-            for (var j = 0; j < properties.length; j++) {
-              this.list.push(properties[j]);
-            }
+            this.addList(i-1);
           }
-          this.updateList();
+          this.el_text.value = '';
+          this.updateList(this.list);
+        });
+        this.el_text.addEventListener('keydown', (e) => {
+          if(e.which == 13)
+          {
+            this.filter(this.el_text.value);
+            e.preventDefault();
+          }
+          if(e.key === "Escape")
+          {
+            this.filter('');
+            this.el_text.value = '';
+          }
+        });
+
+        document.getElementById('selection-button').addEventListener('click', (e) => {
+          this.filter('');
+          this.el_text.value = '';
         });
       }
 
+      addList(i) {
+        const methods = this.source[this.source.object[i]].methods;
+        if (methods) {
+          for (var j = 0; j < methods.length; j++) {
+            this.list.push(methods[j] + '/' + this.source.object[i] + '/' + 'm');
+          }
+        }
+        const properties = this.source[this.source.object[i]].properties;
+        if (properties) {
+          for (var j = 0; j < properties.length; j++) {
+            this.list.push(properties[j] + '/' + this.source.object[i] + '/' + 'P');
+          }
+        }
+        const tags = this.source[this.source.object[i]].tags;
+        if (tags) {
+          for (var j = 0; j < tags.length; j++) {
+            this.list.push(tags[j] + '/' + this.source.object[i] + '/' + 'T');
+          }
+        }
+        const events = this.source[this.source.object[i]].events;
+        if (events) {
+          for (var j = 0; j < events.length; j++) {
+            this.list.push(events[j] + '/' + this.source.object[i] + '/' + 'E');
+          }
+        }
+    }
+
+      filter(value) {
+        const regex = new RegExp('^' + value, 'gi');
+          const temp_list = []
+          for (var i = 0; i < this.list.length; i++) {
+            if (this.list[i].match(regex)) {
+              temp_list.push(this.list[i]);
+            }
+          }
+          this.updateList(temp_list);
+      }
       updateObject() {
-        this.list = [];
+        this.list = []; 
+        while(this.el_object.hasChildNodes())
+        {
+          this.el_object.removeChild(this.el_object.firstChild);
+        }
         if(this.source)
         {
           var d = document.createElement('option');
@@ -2061,23 +2109,12 @@
             d.innerText = this.source.object[i];
             this.el_object.appendChild(d);
 
-            const methods = this.source[this.source.object[i]].methods;
-            for (var j = 0; j < methods.length; j++) {
-              this.list.push(methods[j]);
-            }
-            const properties = this.source[this.source.object[i]].properties;
-            for (var j = 0; j < properties.length; j++) {
-              this.list.push(properties[j]);
-            }
+            this.addList(i);
           }
-          this.updateList();
+          this.updateList(this.list);
         }
         else
         {
-          while(this.el_object.hasChildNodes())
-          {
-            this.el_object.removeChild(this.el_object.firstChild);
-          }
           while(this.el_list.hasChildNodes())
           { 
             this.el_list.removeChild(this.el_list.firstChild);
@@ -2085,22 +2122,41 @@
         }
       }
       
-      updateList(){
+      updateList(li){
         while(this.el_list.hasChildNodes())
         {
           this.el_list.removeChild(this.el_list.firstChild);
         }
-        this.list.sort(function(a, b)  {
+        li.sort(function(a, b)  {
           if(a.toLowerCase() > b.toLowerCase()) return 1;
           if(a.toLowerCase() === b.toLowerCase()) return 0;
           if(a.toLowerCase() < b.toLowerCase()) return -1;
         });
 
-        for(var l of this.list)
+        for(var l of li)
         {
+          var s = l.split('/');
           var d = document.createElement('div');
           d.classList.add('code_list');
-          d.innerText = l;
+          d.style.position = 'relative';
+          var c = document.createElement('div');
+          c.innerText = s[2];
+          c.classList.add('code_list_icon');
+          d.appendChild(c);
+          var t = document.createElement('div');
+          t.innerText = s[0];
+          t.style.left = 0;
+          t.classList.add('code_list_content');
+          
+          d.appendChild(t);
+          var o = document.createElement('div');
+          o.innerText = s[1];
+          o.style.right = 0;
+          o.style.textAlign = 'right';
+          o.style.color = '#949494';
+          o.classList.add('code_list_content');
+          d.appendChild(o);
+          
           this.el_list.appendChild(d);
         }
       }
