@@ -116,6 +116,9 @@
       <li id="file-save">Save<div class='menu-shortcut'>ctrl + S</div></li>
       <li id="file-saveall">Save All</li>
       <div class='list_divide'></div>
+      <li id='file-savelocal'>Save Local</li>
+      <li id='file-loadlocal'>Load Local</li>
+      <div class='list_divide'></div>
       <li id="file-exit">Exit</li>
     </ul>
   </div>
@@ -1718,14 +1721,14 @@
         });
       }
 
-      addFolder(name, parent = null) {
+      addFolder(name, specific = null, parent = null) {
         if (parent) {
           this.current_node = parent;
         }
         const check = this.current_node.querySelectorAll('#' + this.current_node.id + ' > ul');
         for (const c of check) {
           if (c.id == name) {
-            alert('same folder name');
+            if(!specific){alert('same folder name')};
             return c;
           }
         }
@@ -1899,12 +1902,12 @@
         const check = this.current_node.querySelectorAll(':scope > li');
         for (const c of check) {
           if (c.id == file) {
-            alert('same file name');
+            if(!ct) {alert('same file name')};
             return false;
           }
         }
 
-        const ul = ct ? this.element : this.current_node;
+        const ul = this.current_node;//수정
         const li = document.createElement('li');
         li.id = file;
         li.classList.add('tree_element');
@@ -2077,14 +2080,48 @@
       }
 
 
+      saveLocalStorage() {
+        if(this.list_context)
+        {
+          localStorage.setItem('contexts', JSON.stringify(this.list_context));
+        }
+      }
+      
+      loadLocalStorage() {
+        while (this.element.firstChild) {
+          this.element.removeChild(this.element.lastChild);
+        }
+        this.list_context = [];
+
+        var lists = JSON.parse(localStorage.getItem('contexts'));
+        console.log(lists);
+        for(var c of lists)
+        {
+          const path = c.path.split('\\');
+          for(var i = 1; i < path.length - 1; i++)
+          {
+            this.current_node = this.addFolder(path[i], true);
+          }
+          this.addFile(c.file_name, c);
+          this.current_node = this.element;
+        }
+        this.sort();
+      }
+
     }
     const tree_file = new Tree('tree_file');
 
-    tree_file.addFolder('Project');
-    tree_file.addFile('empty.html');
-    tree_file.addFolder('source');
-    tree_file.addFile('mystyle.css');
-    tree_file.addFile('source.js');
+    if(!localStorage.getItem('contexts'))
+    {
+      tree_file.addFolder('Project');
+      tree_file.addFile('empty.html');
+      tree_file.addFolder('source');
+      tree_file.addFile('mystyle.css');
+      tree_file.addFile('source.js');
+    }else{
+      tree_file.loadLocalStorage();
+    }
+
 
     tree_file.sort(tree_file.element);
     tree_file.element.addEventListener("contextmenu", function (event) {
@@ -2654,6 +2691,15 @@
       cw.el.style.display = '';
     });
     
+    document.getElementById('file-savelocal').addEventListener('click', (e) => {
+      tree_file.saveLocalStorage();
+    });
+    document.getElementById('file-loadlocal').addEventListener('click', (e) => {
+      if (confirm("Overwrite it?") == false) {
+        return;
+      }
+      tree_file.loadLocalStorage();
+    });
 
     
   </script>
