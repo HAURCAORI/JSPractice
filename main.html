@@ -118,6 +118,7 @@
       <div class='list_divide'></div>
       <li id='file-savelocal'>Save Local</li>
       <li id='file-loadlocal'>Load Local</li>
+      <li id='file-clearlocal'>Clear</li>
       <div class='list_divide'></div>
       <li id="file-exit">Exit</li>
     </ul>
@@ -1902,12 +1903,13 @@
         const check = this.current_node.querySelectorAll(':scope > li');
         for (const c of check) {
           if (c.id == file) {
-            if(!ct) {alert('same file name')};
+            if(!ct) {alert('same file name');}
             return false;
           }
         }
+        var ul = this.current_node;//수정
 
-        const ul = this.current_node;//수정
+        if(ct) {if(ct.path.length > 0) {ul = this.element}};
         const li = document.createElement('li');
         li.id = file;
         li.classList.add('tree_element');
@@ -2095,6 +2097,7 @@
 
         var lists = JSON.parse(localStorage.getItem('contexts'));
         console.log(lists);
+        this.current_node = this.element;
         for(var c of lists)
         {
           const path = c.path.split('\\');
@@ -2604,11 +2607,17 @@
             m.style.display = "none";
           }
         }
-
       });
     };
     menu_assign();
 
+
+    function menuhide() {
+      onmenu = false;
+      for (var m of document.querySelectorAll('.menu_bar_box')) {
+        m.style.display = "none";
+      }
+    }
     document.addEventListener('keydown', (e) => {
       if (e.ctrlKey && e.which == 79) {
         document.getElementById('open_file').click();
@@ -2693,12 +2702,17 @@
     
     document.getElementById('file-savelocal').addEventListener('click', (e) => {
       tree_file.saveLocalStorage();
+      menuhide();
     });
     document.getElementById('file-loadlocal').addEventListener('click', (e) => {
       if (confirm("Overwrite it?") == false) {
         return;
       }
       tree_file.loadLocalStorage();
+    });
+    document.getElementById('file-clearlocal').addEventListener('click', (e) => {
+      localStorage.removeItem('contexts');
+      menuhide();
     });
 
     
